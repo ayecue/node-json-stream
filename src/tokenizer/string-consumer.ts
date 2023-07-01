@@ -1,5 +1,5 @@
-import { Consumer } from "./consumer";
-import { TokenCode, TokenizerBase } from "./tokenizer-base";
+import { Consumer } from './consumer';
+import { TokenCode, TokenizerBase } from './tokenizer-base';
 
 export enum StringConsumerState {
   Pending = 0,

@@ -1,7 +1,14 @@
-import { TokenCode, TokenResult, PendingTokenResult, TokenType, TokenizerBase } from "./tokenizer/tokenizer-base";
-import { DigitConsumer } from "./tokenizer/digit-consumer";
-import { StringConsumer } from "./tokenizer/string-consumer";
-import { Transform, TransformCallback, TransformOptions } from "stream";
+import { Transform, TransformCallback, TransformOptions } from 'stream';
+
+import { DigitConsumer } from './tokenizer/digit-consumer';
+import { StringConsumer } from './tokenizer/string-consumer';
+import {
+  PendingTokenResult,
+  TokenCode,
+  TokenizerBase,
+  TokenResult,
+  TokenType
+} from './tokenizer/tokenizer-base';
 
 export class Tokenizer extends Transform implements TokenizerBase {
   private _buffer: string = '';
@@ -11,8 +18,6 @@ export class Tokenizer extends Transform implements TokenizerBase {
     super({
       ...options,
       objectMode: true,
-      readableObjectMode: true,
-      writableObjectMode: true,
       encoding: 'utf-8'
     });
   }
@@ -37,7 +42,7 @@ export class Tokenizer extends Transform implements TokenizerBase {
         this._buffer = this._buffer.slice(numericScanner.index);
         return new TokenResult(TokenType.NumericLiteral, value);
       }
-  
+
       return new PendingTokenResult(TokenType.Incomplete, consume);
     };
 
@@ -52,7 +57,7 @@ export class Tokenizer extends Transform implements TokenizerBase {
         this._buffer = this._buffer.slice(stringScanner.index);
         return new TokenResult(TokenType.StringLiteral, value);
       }
-  
+
       return new PendingTokenResult(TokenType.Incomplete, consume);
     };
 
@@ -139,7 +144,7 @@ export class Tokenizer extends Transform implements TokenizerBase {
     } else {
       current = this.next();
     }
-    
+
     while (current.type !== TokenType.EOF) {
       if (current.type === TokenType.Invalid) {
         this._buffer = '';

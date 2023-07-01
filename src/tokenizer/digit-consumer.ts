@@ -1,5 +1,5 @@
-import { Consumer } from "./consumer";
-import { TokenCode, TokenizerBase } from "./tokenizer-base";
+import { Consumer } from './consumer';
+import { TokenCode, TokenizerBase } from './tokenizer-base';
 
 export enum DigitConsumerState {
   WholeNumber = 0,
@@ -86,7 +86,11 @@ export class DigitConsumer extends Consumer {
   }
 
   consume(): boolean {
-    while (!this.tokenizer.isEOF() && this.state !== DigitConsumerState.Completed) this.digest();
+    while (
+      !this.tokenizer.isEOF() &&
+      this.state !== DigitConsumerState.Completed
+    )
+      this.digest();
     return this.state === DigitConsumerState.Completed;
   }
 

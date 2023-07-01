@@ -1,6 +1,8 @@
-import { Transform, TransformCallback, TransformOptions } from "stream";
-import { TokenResult } from "./tokenizer/tokenizer-base";
-import { RootConsumer } from "./parser/root-consumer";
+import { Transform, TransformCallback, TransformOptions } from 'stream';
+
+import { ConsumerState } from './parser/consumer';
+import { RootConsumer } from './parser/root-consumer';
+import { TokenResult, TokenType } from './tokenizer/tokenizer-base';
 
 export class Parser extends Transform {
   private _buffer: string = '';
@@ -18,12 +20,22 @@ export class Parser extends Transform {
     this._buffer += chunk.toString(encoding);
     const item = TokenResult.parse(this._buffer);
 
+    if (item.type === TokenType.Invalid) {
+      console.error('Invalid token');
+      this._buffer = '';
+      callback(null);
+      return;
+    }
+
     if (!this._root) {
       this._root = new RootConsumer();
     }
 
     if (this._root.consume(item)) {
-      this.push(JSON.stringify(this._root.data));
+      this.push(this._root.data);
+      this._root = null;
+    } else if (this._root.state === ConsumerState.Failed) {
+      console.error('Invalid JSON');
       this._root = null;
     }
 

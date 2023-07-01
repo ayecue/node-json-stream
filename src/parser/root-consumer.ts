@@ -1,17 +1,23 @@
-import { TokenResult, TokenType } from "../tokenizer/tokenizer-base";
-import { ArrayConsumer } from "./array-consumer";
-import { Consumer, ConsumerState, PendingResolveResult, ResolveResult } from "./consumer";
-import { ObjectConsumer } from "./object-consumer";
+import { TokenResult, TokenType } from '../tokenizer/tokenizer-base';
+import { ArrayConsumer } from './array-consumer';
+import {
+  Consumer,
+  ConsumerState,
+  PendingResolveResult,
+  ResolveResult
+} from './consumer';
+import { ObjectConsumer } from './object-consumer';
 
 export class RootConsumer extends Consumer {
   protected resolve(item: TokenResult): ResolveResult | PendingResolveResult {
     switch (item.type) {
-      case TokenType.Punctuator:
+      case TokenType.Punctuator: {
         if (item.value === '[') {
           return new PendingResolveResult(new ArrayConsumer());
         } else if (item.value === '{') {
           return new PendingResolveResult(new ObjectConsumer());
         }
+      }
       default:
         return super.resolve(item);
     }
@@ -23,13 +29,15 @@ export class RootConsumer extends Consumer {
         this._data = this._pending.data;
         this._state = ConsumerState.Done;
         this._pending = null;
+      } else if (this._pending.state === ConsumerState.Failed) {
+        this._state = ConsumerState.Failed;
       }
     } else {
       const result = this.resolve(item);
 
       if (result instanceof PendingResolveResult) {
         this._pending = result;
-      } else if (result instanceof PendingResolveResult) {
+      } else if (result instanceof ResolveResult) {
         this._data = result.data;
         this._state = ConsumerState.Done;
       }

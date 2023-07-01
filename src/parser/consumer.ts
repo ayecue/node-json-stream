@@ -1,14 +1,15 @@
-import { TokenResult, TokenType } from "../tokenizer/tokenizer-base";
+import { TokenResult, TokenType } from '../tokenizer/tokenizer-base';
 
 export enum ConsumerState {
   Pending = 0,
-  Done = 1
+  Done = 1,
+  Failed = -1
 }
 
 export class ResolveResult {
-  private _data?: any;
+  private _data?: string;
 
-  constructor(data?: any) {
+  constructor(data: string = '') {
     this._data = data;
   }
 
@@ -32,34 +33,42 @@ export class PendingResolveResult extends ResolveResult {
   get data(): any {
     return this.pending.data;
   }
+
+  get state(): any {
+    return this.pending.state;
+  }
 }
 
 export class Consumer {
   protected _pending: PendingResolveResult | null = null;
-  protected _data: any = null;
+  protected _data: string = '';
+  protected _errors: string[] = [];
   protected _state: ConsumerState = ConsumerState.Pending;
 
   protected resolve(item: TokenResult): ResolveResult {
     switch (item.type) {
       case TokenType.StringLiteral:
-        const strValue = item.value.slice(1, -1);
-        return new ResolveResult(strValue);
+        return new ResolveResult(item.value);
       case TokenType.NumericLiteral:
-        const numValue = Number(item.value);
-        return new ResolveResult(numValue);
+        return new ResolveResult(item.value);
       case TokenType.BooleanLiteral:
-        const boolValue = item.value === 'true';
-        return new ResolveResult(numValue);
+        return new ResolveResult(item.value);
       default:
-        throw new Error('Unexpected type.');
+        this._state = ConsumerState.Failed;
+        this._errors.push('Unexpected type.');
+        break;
     }
   }
 
-  consume(item: TokenResult): boolean {
+  consume(_item: TokenResult): boolean {
     return false;
   }
 
-  get data(): any {
+  get data(): string {
     return this._data;
+  }
+
+  get state(): ConsumerState {
+    return this._state;
   }
 }

@@ -1,60 +1,68 @@
-import { Duplex, Writable } from 'stream';
-import { Parser, Tokenizer } from '../src/index';
+const Benchmarkify = require("benchmarkify");
+import { Parser as JsonStreamParser, Tokenizer } from '../src/index';
+import { chain } from 'stream-chain';
+import Parser from 'stream-json/Parser';
+import StreamValues from 'stream-json/streamers/StreamValues';
 
-class TestStream extends Duplex {
-  _read() {}
+const myJsonStreamPerf = (count: number = 1) => {
+  const testStream = chain([
+    new Tokenizer(),
+    new JsonStreamParser()
+  ]);
 
-  _write(chunk, encoding, callback) {
-    this.push(chunk);
-    callback(null);
+  testStream.on('data', (data) => {
+    const payload = JSON.parse(data);
+
+    if (payload.data.index === count) {
+      
+    }
+  });
+
+  for (let i = 0; i <= count; i++) {
+    testStream.write(JSON.stringify({
+      method: 'test',
+      data: {
+        message: 'Hello, " server! Love, Client.',
+        index: i
+      }
+    }));
   }
+};
 
-  _final() {
-    this.push(null);
+const jsonStreamPerf = (count: number = 1) => {
+  const testStream = chain([
+    new Parser({
+      jsonStreaming: true
+    }),
+    new StreamValues()
+  ]);
+  
+  testStream.on('data', (data) => {
+    if (data.value.data.index === count) {
+      
+    }
+  });
+  
+  for (let i = 0; i <= count; i++) {
+    testStream.write(JSON.stringify({
+      method: 'test',
+      data: {
+        message: 'Hello, " server! Love, Client.',
+        index: i
+      }
+    }));
   }
-}
+};
 
-class FinalStream extends Writable {
-  _read() {}
+const benchmark = new Benchmarkify("Json Perf").printHeader();
 
-  _write(chunk, encoding, callback) {
-    console.log('received', chunk.toString());
-    callback(null);
-  }
+// Create a test suite
+const bench1 = benchmark.createSuite("Increment integer");
 
-  _final() {
-  }
-}
+// Add first func
+bench1.add("MyJsonStream", () => myJsonStreamPerf());
 
-const testStream = new TestStream();
-const final = new FinalStream();
-const parser = new Parser();
-const tokenizer = new Tokenizer();
+// Add second func. This result will be the reference
+bench1.ref("JsonStream", () => jsonStreamPerf());
 
-testStream.pipe(tokenizer).pipe(parser).pipe(final);
-
-const message = JSON.stringify({
-  method: 'test',
-  data: {
-    message: 'Hello, " server! Love, Client.'
-  }
-});
-
-const offset = 20;
-
-tokenizer.on('error', (message) => {
-  console.log('Error', message);
-});
-
-console.log('send');
-testStream.write(message.slice(0, offset))
-
-setTimeout(() => {
-  console.log('send');
-  testStream.write(message.slice(offset));
-}, 2000)
-
-setTimeout(() => {
-  console.log('send');
-  testStream.write(message);
-}, 5000)
+bench1.run();

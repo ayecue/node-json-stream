@@ -28,6 +28,7 @@
     ],
     "rules": {
       "camelcase": "off",
+      "no-fallthrough": "warn",
       "no-unused-vars": "off",
       "no-empty": "off",
       "no-use-before-define": "off",
