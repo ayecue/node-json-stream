@@ -7,7 +7,7 @@
     "dev": "ts-node ./src/index.ts",
     "watch": "ts-node-dev ./src/index.ts --watch",
     "bench": "ts-node ./benchmark/index.ts",
-    "test": "ts-node ./test/test.ts",
+    "test": "ts-node ./test/index.ts",
     "build": "tsc -p ./"
   },
   "repository": {

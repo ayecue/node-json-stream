@@ -27,12 +27,13 @@ export class DigitConsumer extends Consumer {
 
     while (item !== null) {
       if (item < TokenCode.Number0 || item > TokenCode.Number9) {
-        callback();
         break;
       }
 
       item = this.tokenizer.getItemAt(++this._index);
     }
+
+    callback();
   }
 
   private digestDot() {

@@ -21,14 +21,20 @@ parser.on('invalid-token', (err) => {
   console.log('InvalidToken', err);
 });
 
-testStream.write("{ was: aw}");
+testStream.write(JSON.stringify("hello world"))
+testStream.write(JSON.stringify(1234.34))
+testStream.write(JSON.stringify(true))
 
 for (let i = 0; i <= 10; i++) {
   testStream.write(JSON.stringify({
     method: 'test',
     data: {
       message: 'Hello, " server! Love, Client.',
-      index: i
+      index: i,
+      myTest: 12e+45,
+      hello: 1.235,
+      abab: 12.4e+45,
+      another: ["was", true, false, null]
     }
   }));
 }
