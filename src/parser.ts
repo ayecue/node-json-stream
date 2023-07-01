@@ -16,11 +16,9 @@ export class Parser extends Transform {
     });
   }
 
-  _transform(chunk: Buffer, encoding: string, callback: TransformCallback) {
-    const item = TokenResult.parse(chunk.toString(encoding));
-
+  _transform(item: TokenResult, encoding: string, callback: TransformCallback) {
     if (item.type === TokenType.Invalid) {
-      console.error('Invalid token');
+      this.emit('invalid-token', item);
       callback(null);
       return;
     }
@@ -33,7 +31,7 @@ export class Parser extends Transform {
       this.emit('data', this._root.data);
       this._root = null;
     } else if (this._root.state === ConsumerState.Failed) {
-      console.error('Invalid JSON');
+      this.emit('invalid-json', item);
       this._root = null;
     }
 

@@ -38,7 +38,7 @@
         "error",
         { "args": "after-used", "argsIgnorePattern": "^_" }
       ],
-      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-explicit-any": "off",
       "simple-import-sort/imports": "error",
       "simple-import-sort/exports": "error",
       "prettier/prettier": ["error", { "singleQuote": true, "trailingComma": "none" }]

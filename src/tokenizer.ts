@@ -32,7 +32,7 @@ export class Tokenizer extends Transform implements TokenizerBase {
       return null;
     }
 
-    return this._buffer[offset].charCodeAt(0);
+    return this._buffer.charCodeAt(offset);
   }
 
   private scanNumericLiteral() {
@@ -151,14 +151,14 @@ export class Tokenizer extends Transform implements TokenizerBase {
 
     while (current.type !== TokenType.EOF) {
       if (current.type === TokenType.Invalid) {
-        this._buffer = '';
-        this.push(current.toString());
+        this._buffer = this._buffer.slice(1);
+        this.emit('data', current);
         break;
       } else if (current.type === TokenType.Incomplete) {
         this._pending = current;
         break;
       } else {
-        this.push(current.toString());
+        this.emit('data', current);
       }
 
       current = this.next();

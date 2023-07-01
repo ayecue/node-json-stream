@@ -1,15 +1,24 @@
 import { Parser as JsonStreamParser, Tokenizer } from '../src/index';
 import { chain } from 'stream-chain';
 
+const tokenizer = new Tokenizer();
+const parser = new JsonStreamParser();
+
 const testStream = chain([
-  new Tokenizer(),
-  new JsonStreamParser()
+  tokenizer,
+  parser
 ]);
 
 testStream.on('data', (data) => {
-  const payload = JSON.parse(data);
+  console.log(data);
+});
 
-  console.log(payload);
+parser.on('invalid-json', (err) => {
+  console.log('InvalidJSON', err);
+});
+
+parser.on('invalid-token', (err) => {
+  console.log('InvalidToken', err);
 });
 
 testStream.write("{ was: aw}");
