@@ -2,7 +2,7 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "es2020",
-    "lib": ["dom", "ES2020"],
+    "lib": ["dom", "es2021"],
     "outDir": "out",
     "sourceMap": true,
     "rootDir": "src",

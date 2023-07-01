@@ -2,13 +2,14 @@ import { Consumer } from './consumer';
 import { TokenCode, TokenizerBase } from './tokenizer-base';
 
 export enum DigitConsumerState {
-  WholeNumber = 0,
-  Dot = 1,
-  FloatingDigit = 2,
-  ENotation = 3,
-  EOperation = 4,
-  ENotationDigits = 5,
-  Completed = 6
+  Unary = 0,
+  WholeNumber = 1,
+  Dot = 2,
+  FloatingDigit = 3,
+  ENotation = 4,
+  EOperation = 5,
+  ENotationDigits = 6,
+  Completed = 7
 }
 
 export class DigitConsumer extends Consumer {
@@ -16,10 +17,19 @@ export class DigitConsumer extends Consumer {
   private _index: number;
   private state: DigitConsumerState = DigitConsumerState.WholeNumber;
 
-  constructor(tokenizer: TokenizerBase, offset: number = 0) {
+  constructor(tokenizer: TokenizerBase, offset: number = 1) {
     super();
     this.tokenizer = tokenizer;
     this._index = offset;
+  }
+
+  private digestUnary() {
+    const item = this.tokenizer.getItemAt(this._index);
+
+    if (item === TokenCode.Minus || item === TokenCode.Plus) {
+      this._index++;
+    }
+    this.state++;
   }
 
   private digestDigits(callback = () => {}) {
@@ -69,6 +79,9 @@ export class DigitConsumer extends Consumer {
 
   private digest(): void {
     switch (this.state) {
+      case DigitConsumerState.Unary:
+        this.digestUnary();
+        break;
       case DigitConsumerState.WholeNumber:
       case DigitConsumerState.FloatingDigit:
       case DigitConsumerState.ENotationDigits:

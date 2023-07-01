@@ -1,4 +1,5 @@
 import { TokenResult, TokenType } from '../tokenizer/tokenizer-base';
+import { transformToBoolean, transformToNumber } from './utils';
 
 export enum ConsumerState {
   Pending = 0,
@@ -48,16 +49,13 @@ export class Consumer {
   protected resolve(item: TokenResult): ResolveResult {
     switch (item.type) {
       case TokenType.StringLiteral: {
-        const strValue = item.value.slice(1, -1);
-        return new ResolveResult(strValue);
+        return new ResolveResult(item.value);
       }
       case TokenType.NumericLiteral: {
-        const numValue = Number(item.value);
-        return new ResolveResult(numValue);
+        return new ResolveResult(transformToNumber(item.value));
       }
       case TokenType.BooleanLiteral: {
-        const boolValue = item.value === 'true';
-        return new ResolveResult(boolValue);
+        return new ResolveResult(transformToBoolean(item.value));
       }
       case TokenType.NilLiteral: {
         return new ResolveResult(null);

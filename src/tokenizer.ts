@@ -35,6 +35,14 @@ export class Tokenizer extends Transform implements TokenizerBase {
     return this._buffer.charCodeAt(offset);
   }
 
+  getRawItemAt(offset: number = 0): string | null {
+    if (this._buffer.length <= offset) {
+      return null;
+    }
+
+    return this._buffer.charAt(offset);
+  }
+
   private scanNumericLiteral() {
     const numericScanner = new DigitConsumer(this, 1);
     const consume = (): TokenResult => {
@@ -54,7 +62,7 @@ export class Tokenizer extends Transform implements TokenizerBase {
     const stringScanner = new StringConsumer(this, 1);
     const consume = (): TokenResult => {
       if (stringScanner.consume()) {
-        const value = this._buffer.slice(0, stringScanner.index);
+        const value = stringScanner.value;
         this._buffer = this._buffer.slice(stringScanner.index);
         return new TokenResult(TokenType.StringLiteral, value);
       }
@@ -81,6 +89,9 @@ export class Tokenizer extends Transform implements TokenizerBase {
       case TokenCode.Colon:
       case TokenCode.Comma:
         return this.scanPunctuator(item);
+      case TokenCode.Plus:
+      case TokenCode.Minus:
+        return this.scanNumericLiteral();
       default:
         if (TokenCode.Number0 <= item && TokenCode.Number9 >= item) {
           return this.scanNumericLiteral();

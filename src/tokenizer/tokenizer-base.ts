@@ -88,5 +88,6 @@ export class PendingTokenResult extends TokenResult {
 
 export interface TokenizerBase {
   getItemAt(offset?: number): number | null;
+  getRawItemAt(offset?: number): string | null;
   isEOF(): boolean;
 }

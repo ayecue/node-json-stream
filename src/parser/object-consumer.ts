@@ -56,7 +56,7 @@ export class ObjectConsumer extends Consumer {
             this._errors.push('Object key has to be string.');
             break;
           }
-          this._lastKey = item.value.slice(1, -1);
+          this._lastKey = item.value;
           this._objectState = ObjectConsumerState.WaitingForDelimiter;
           break;
         }
