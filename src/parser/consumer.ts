@@ -7,9 +7,9 @@ export enum ConsumerState {
 }
 
 export class ResolveResult {
-  private _data?: string;
+  private _data?: any;
 
-  constructor(data: string = '') {
+  constructor(data: any = null) {
     this._data = data;
   }
 
@@ -41,22 +41,32 @@ export class PendingResolveResult extends ResolveResult {
 
 export class Consumer {
   protected _pending: PendingResolveResult | null = null;
-  protected _data: string = '';
+  protected _data: any;
   protected _errors: string[] = [];
   protected _state: ConsumerState = ConsumerState.Pending;
 
   protected resolve(item: TokenResult): ResolveResult {
     switch (item.type) {
-      case TokenType.StringLiteral:
-        return new ResolveResult(item.value);
-      case TokenType.NumericLiteral:
-        return new ResolveResult(item.value);
-      case TokenType.BooleanLiteral:
-        return new ResolveResult(item.value);
-      default:
+      case TokenType.StringLiteral: {
+        const strValue = item.value.slice(1, -1);
+        return new ResolveResult(strValue);
+      }
+      case TokenType.NumericLiteral: {
+        const numValue = Number(item.value);
+        return new ResolveResult(numValue);
+      }
+      case TokenType.BooleanLiteral: {
+        const boolValue = item.value === 'true';
+        return new ResolveResult(boolValue);
+      }
+      case TokenType.NilLiteral: {
+        return new ResolveResult(null);
+      }
+      default: {
         this._state = ConsumerState.Failed;
         this._errors.push('Unexpected type.');
         break;
+      }
     }
   }
 
@@ -64,7 +74,7 @@ export class Consumer {
     return false;
   }
 
-  get data(): string {
+  get data(): any {
     return this._data;
   }
 

@@ -17,7 +17,8 @@ export class Tokenizer extends Transform implements TokenizerBase {
   constructor(options: TransformOptions = {}) {
     super({
       ...options,
-      objectMode: true,
+      writableObjectMode: true,
+      readableObjectMode: true,
       encoding: 'utf-8'
     });
   }
@@ -95,6 +96,9 @@ export class Tokenizer extends Transform implements TokenizerBase {
     } else if (this._buffer.startsWith('false')) {
       this._buffer = this._buffer.slice(5);
       return new TokenResult(TokenType.BooleanLiteral, 'false');
+    } else if (this._buffer.startsWith('null')) {
+      this._buffer = this._buffer.slice(4);
+      return new TokenResult(TokenType.NilLiteral);
     }
 
     return null;

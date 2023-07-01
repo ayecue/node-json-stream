@@ -16,7 +16,8 @@ export enum ObjectConsumerState {
 }
 
 export class ObjectConsumer extends Consumer {
-  protected _data: string = '{';
+  protected _data: Record<string, any> = {};
+  private _lastKey: string;
   private _objectState: ObjectConsumerState = ObjectConsumerState.Initial;
 
   protected resolve(item: TokenResult): ResolveResult | PendingResolveResult {
@@ -35,7 +36,7 @@ export class ObjectConsumer extends Consumer {
   consume(item: TokenResult): boolean {
     if (this._pending !== null) {
       if (this._pending.consume(item)) {
-        this._data += this._pending.data;
+        this._data[this._lastKey] = this._pending.data;
         this._objectState = ObjectConsumerState.WaitingForComma;
         this._pending = null;
       } else if (this._pending.state === ConsumerState.Failed) {
@@ -45,7 +46,6 @@ export class ObjectConsumer extends Consumer {
       switch (this._objectState) {
         case ObjectConsumerState.Initial: {
           if (item.type === TokenType.Punctuator && item.value === '}') {
-            this._data += '}';
             this._state = ConsumerState.Done;
             break;
           }
@@ -56,7 +56,7 @@ export class ObjectConsumer extends Consumer {
             this._errors.push('Object key has to be string.');
             break;
           }
-          this._data += item.value;
+          this._lastKey = item.value.slice(1, -1);
           this._objectState = ObjectConsumerState.WaitingForDelimiter;
           break;
         }
@@ -66,7 +66,6 @@ export class ObjectConsumer extends Consumer {
             this._errors.push('Expected delimiter in object.');
             break;
           }
-          this._data += ':';
           this._objectState = ObjectConsumerState.WaitingForValue;
           break;
         }
@@ -76,13 +75,12 @@ export class ObjectConsumer extends Consumer {
             this._pending = result;
             break;
           }
-          this._data += result.data;
+          this._data[this._lastKey] = result.data;
           this._objectState = ObjectConsumerState.WaitingForComma;
           break;
         }
         case ObjectConsumerState.WaitingForComma: {
           if (item.type === TokenType.Punctuator && item.value === '}') {
-            this._data += '}';
             this._state = ConsumerState.Done;
             break;
           }
@@ -91,7 +89,6 @@ export class ObjectConsumer extends Consumer {
             this._errors.push('Expected comma in object.');
             break;
           }
-          this._data += ',';
           this._objectState = ObjectConsumerState.WaitingForKey;
           break;
         }
@@ -101,7 +98,7 @@ export class ObjectConsumer extends Consumer {
     return this._state === ConsumerState.Done;
   }
 
-  get data(): string {
+  get data(): Record<string, any> {
     return this._data;
   }
 }

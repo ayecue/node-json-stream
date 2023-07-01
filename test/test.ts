@@ -3,6 +3,7 @@ import { Parser as JsonStreamParser, Tokenizer } from '../src/index';
 import { chain } from 'stream-chain';
 import Parser from 'stream-json/Parser';
 import StreamValues from 'stream-json/streamers/StreamValues';
+import JSONStream from 'JSONStream';
 
 const myJsonStreamPerf = (count: number = 1) => {
   const testStream = chain([
@@ -10,11 +11,9 @@ const myJsonStreamPerf = (count: number = 1) => {
     new JsonStreamParser()
   ]);
 
-  testStream.on('data', (data) => {
-    const payload = JSON.parse(data);
-
+  testStream.on('data', (payload) => {
     if (payload.data.index === count) {
-      
+
     }
   });
 
@@ -54,15 +53,35 @@ const jsonStreamPerf = (count: number = 1) => {
   }
 };
 
+const jsonStream2Perf = (count: number = 1) => {
+  const testStream = chain([
+    JSONStream.parse()
+  ]);
+  
+  testStream.on('data', (payload) => {
+    if (payload.data.index === count) {
+      
+    }
+  });
+  
+  for (let i = 0; i <= count; i++) {
+    testStream.write(JSON.stringify({
+      method: 'test',
+      data: {
+        message: 'Hello, " server! Love, Client.',
+        index: i
+      }
+    }));
+  }
+};
+
 const benchmark = new Benchmarkify("Json Perf").printHeader();
 
 // Create a test suite
 const bench1 = benchmark.createSuite("Increment integer");
 
-// Add first func
-bench1.add("MyJsonStream", () => myJsonStreamPerf());
-
-// Add second func. This result will be the reference
-bench1.ref("JsonStream", () => jsonStreamPerf());
+bench1.add("my-json-stream", () => myJsonStreamPerf());
+bench1.ref("json-stream", () => jsonStreamPerf());
+bench1.ref("JSONStream", () => jsonStream2Perf());
 
 bench1.run();

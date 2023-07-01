@@ -14,7 +14,7 @@ export enum ArrayConsumerState {
 }
 
 export class ArrayConsumer extends Consumer {
-  protected _data: string = '[';
+  protected _data: any[] = [];
   private _arrayState: ArrayConsumerState = ArrayConsumerState.Initial;
 
   protected resolve(item: TokenResult): ResolveResult | PendingResolveResult {
@@ -33,7 +33,7 @@ export class ArrayConsumer extends Consumer {
   consume(item: TokenResult): boolean {
     if (this._pending !== null) {
       if (this._pending.consume(item)) {
-        this._data += this._pending.data;
+        this._data.push(this._pending.data);
         this._arrayState = ArrayConsumerState.WaitingForComma;
         this._pending = null;
       } else if (this._pending.state === ConsumerState.Failed) {
@@ -43,7 +43,6 @@ export class ArrayConsumer extends Consumer {
       switch (this._arrayState) {
         case ArrayConsumerState.Initial: {
           if (item.type === TokenType.Punctuator && item.value === ']') {
-            this._data += ']';
             this._state = ConsumerState.Done;
             break;
           }
@@ -54,13 +53,12 @@ export class ArrayConsumer extends Consumer {
             this._pending = result;
             break;
           }
-          this._data += result.data;
+          this._data.push(result.data);
           this._arrayState = ArrayConsumerState.WaitingForComma;
           break;
         }
         case ArrayConsumerState.WaitingForComma: {
           if (item.type === TokenType.Punctuator && item.value === ']') {
-            this._data += ']';
             this._state = ConsumerState.Done;
             break;
           }
@@ -69,7 +67,6 @@ export class ArrayConsumer extends Consumer {
             this._errors.push('Expected comma in array.');
             break;
           }
-          this._data += ',';
           this._arrayState = ArrayConsumerState.WaitingForValue;
           break;
         }
@@ -79,7 +76,7 @@ export class ArrayConsumer extends Consumer {
     return this._state === ConsumerState.Done;
   }
 
-  get data(): string {
+  get data(): any[] {
     return this._data;
   }
 }

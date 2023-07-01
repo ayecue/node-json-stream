@@ -36,6 +36,7 @@ export enum TokenType {
   NumericLiteral = 'numeric',
   Punctuator = 'punc',
   BooleanLiteral = 'bool',
+  NilLiteral = 'nil',
   Incomplete = 'incomplete'
 }
 
