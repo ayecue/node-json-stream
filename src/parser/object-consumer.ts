@@ -4,7 +4,8 @@ import {
   Consumer,
   ConsumerState,
   PendingResolveResult,
-  ResolveResult
+  ResolveResult,
+  ResultType
 } from './consumer';
 
 export enum ObjectConsumerState {
@@ -17,16 +18,24 @@ export enum ObjectConsumerState {
 
 export class ObjectConsumer extends Consumer {
   protected _data: Record<string, any> = {};
-  private _lastKey: string;
+  protected _size: number = 5;
   private _objectState: ObjectConsumerState = ObjectConsumerState.Initial;
+
+  private _lastKey: string;
 
   protected resolve(item: TokenResult): ResolveResult | PendingResolveResult {
     switch (item.type) {
       case TokenType.Punctuator:
         if (item.value === '[') {
-          return new PendingResolveResult(new ArrayConsumer());
+          return new PendingResolveResult(
+            ResultType.Array,
+            new ArrayConsumer()
+          );
         } else if (item.value === '{') {
-          return new PendingResolveResult(new ObjectConsumer());
+          return new PendingResolveResult(
+            ResultType.Object,
+            new ObjectConsumer()
+          );
         }
       default:
         return super.resolve(item);
@@ -37,10 +46,14 @@ export class ObjectConsumer extends Consumer {
     if (this._pending !== null) {
       if (this._pending.consume(item)) {
         this._data[this._lastKey] = this._pending.data;
+        this._size += this._pending.size;
         this._objectState = ObjectConsumerState.WaitingForComma;
+        this._pendingSize = 0;
         this._pending = null;
       } else if (this._pending.state === ConsumerState.Failed) {
         this._state = ConsumerState.Failed;
+      } else {
+        this._pendingSize = this._pending.size;
       }
     } else {
       switch (this._objectState) {
@@ -57,6 +70,7 @@ export class ObjectConsumer extends Consumer {
             break;
           }
           this._lastKey = item.value;
+          this._size += Buffer.byteLength(item.value);
           this._objectState = ObjectConsumerState.WaitingForDelimiter;
           break;
         }
@@ -76,6 +90,7 @@ export class ObjectConsumer extends Consumer {
             break;
           }
           this._data[this._lastKey] = result.data;
+          this._size += result.size;
           this._objectState = ObjectConsumerState.WaitingForComma;
           break;
         }

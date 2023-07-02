@@ -3,7 +3,8 @@ import {
   Consumer,
   ConsumerState,
   PendingResolveResult,
-  ResolveResult
+  ResolveResult,
+  ResultType
 } from './consumer';
 import { ObjectConsumer } from './object-consumer';
 
@@ -15,15 +16,22 @@ export enum ArrayConsumerState {
 
 export class ArrayConsumer extends Consumer {
   protected _data: any[] = [];
+  protected _size: number = 7;
   private _arrayState: ArrayConsumerState = ArrayConsumerState.Initial;
 
   protected resolve(item: TokenResult): ResolveResult | PendingResolveResult {
     switch (item.type) {
       case TokenType.Punctuator:
         if (item.value === '[') {
-          return new PendingResolveResult(new ArrayConsumer());
+          return new PendingResolveResult(
+            ResultType.Array,
+            new ArrayConsumer()
+          );
         } else if (item.value === '{') {
-          return new PendingResolveResult(new ObjectConsumer());
+          return new PendingResolveResult(
+            ResultType.Object,
+            new ObjectConsumer()
+          );
         }
       default:
         return super.resolve(item);
@@ -34,10 +42,14 @@ export class ArrayConsumer extends Consumer {
     if (this._pending !== null) {
       if (this._pending.consume(item)) {
         this._data.push(this._pending.data);
+        this._size += this._pending.size;
         this._arrayState = ArrayConsumerState.WaitingForComma;
+        this._pendingSize = 0;
         this._pending = null;
       } else if (this._pending.state === ConsumerState.Failed) {
         this._state = ConsumerState.Failed;
+      } else {
+        this._pendingSize = this._pending.size;
       }
     } else {
       switch (this._arrayState) {
@@ -54,6 +66,7 @@ export class ArrayConsumer extends Consumer {
             break;
           }
           this._data.push(result.data);
+          this._size += result.data.size;
           this._arrayState = ArrayConsumerState.WaitingForComma;
           break;
         }

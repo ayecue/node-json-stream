@@ -9,6 +9,8 @@
     "arr": ["myString", true, false, null, {
       "foo": false
     }],
-    "special \" case\"": -4567
+    "special \" case\"": -4567,
+    "emptyObject": {},
+    "emptyArray": []
   }
 }
