@@ -9,18 +9,21 @@ export enum DigitConsumerState {
   ENotation = 4,
   EOperation = 5,
   ENotationDigits = 6,
-  Completed = 7
+  Completed = 7,
+  Failed = -1
 }
 
 export class DigitConsumer extends Consumer {
   private tokenizer: TokenizerBase;
   private _index: number;
-  private state: DigitConsumerState = DigitConsumerState.WholeNumber;
+  private _state: DigitConsumerState = DigitConsumerState.WholeNumber;
+  private maxLength: number;
 
-  constructor(tokenizer: TokenizerBase, offset: number = 1) {
+  constructor(tokenizer: TokenizerBase, maxLength: number, offset: number = 1) {
     super();
     this.tokenizer = tokenizer;
     this._index = offset;
+    this.maxLength = maxLength;
   }
 
   private digestUnary() {
@@ -29,7 +32,7 @@ export class DigitConsumer extends Consumer {
     if (item === TokenCode.Minus || item === TokenCode.Plus) {
       this._index++;
     }
-    this.state++;
+    this._state++;
   }
 
   private digestDigits(callback = () => {}) {
@@ -51,9 +54,9 @@ export class DigitConsumer extends Consumer {
 
     if (item === TokenCode.Dot) {
       this._index++;
-      this.state++;
+      this._state++;
     } else {
-      this.state = DigitConsumerState.ENotation;
+      this._state = DigitConsumerState.ENotation;
     }
   }
 
@@ -62,9 +65,9 @@ export class DigitConsumer extends Consumer {
 
     if (item === TokenCode.E || item === TokenCode.e) {
       this._index++;
-      this.state++;
+      this._state++;
     } else {
-      this.state = DigitConsumerState.Completed;
+      this._state = DigitConsumerState.Completed;
     }
   }
 
@@ -74,18 +77,18 @@ export class DigitConsumer extends Consumer {
     if (item === TokenCode.Minus || item === TokenCode.Plus) {
       this._index++;
     }
-    this.state++;
+    this._state++;
   }
 
   private digest(): void {
-    switch (this.state) {
+    switch (this._state) {
       case DigitConsumerState.Unary:
         this.digestUnary();
         break;
       case DigitConsumerState.WholeNumber:
       case DigitConsumerState.FloatingDigit:
       case DigitConsumerState.ENotationDigits:
-        this.digestDigits(() => this.state++);
+        this.digestDigits(() => this._state++);
         break;
       case DigitConsumerState.Dot:
         this.digestDot();
@@ -102,13 +105,23 @@ export class DigitConsumer extends Consumer {
   consume(): boolean {
     while (
       !this.tokenizer.isEOF() &&
-      this.state !== DigitConsumerState.Completed
+      this._state !== DigitConsumerState.Completed &&
+      this._index <= this.maxLength
     )
       this.digest();
-    return this.state === DigitConsumerState.Completed;
+
+    if (this._index > this.maxLength) {
+      this._state = DigitConsumerState.Failed;
+    }
+
+    return this._state === DigitConsumerState.Completed;
   }
 
   get index(): number {
     return this._index;
+  }
+
+  get state(): DigitConsumerState {
+    return this._state;
   }
 }

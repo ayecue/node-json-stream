@@ -1,7 +1,10 @@
 import { Transform, TransformCallback, TransformOptions } from 'stream';
 
-import { DigitConsumer } from './tokenizer/digit-consumer';
-import { StringConsumer } from './tokenizer/string-consumer';
+import { DigitConsumer, DigitConsumerState } from './tokenizer/digit-consumer';
+import {
+  StringConsumer,
+  StringConsumerState
+} from './tokenizer/string-consumer';
 import {
   PendingTokenResult,
   TokenCode,
@@ -10,17 +13,32 @@ import {
   TokenType
 } from './tokenizer/tokenizer-base';
 
+export interface TokenizerOptions extends TransformOptions {
+  maxNumberLength?: number;
+  maxStringLength?: number;
+}
+
+export const DEFAULT_TOKENIZER_MAX_NUMBER_LENGTH = 20;
+export const DEFAULT_TOKENIZER_MAX_STRING_LENGTH = 1000;
+
 export class Tokenizer extends Transform implements TokenizerBase {
   private _buffer: string = '';
   private _pending: PendingTokenResult | null = null;
 
-  constructor(options: TransformOptions = {}) {
+  readonly maxNumberLength: number;
+  readonly maxStringLength: number;
+
+  constructor(options: TokenizerOptions = {}) {
     super({
-      ...options,
       writableObjectMode: true,
       readableObjectMode: true,
-      encoding: 'utf-8'
+      encoding: 'utf-8',
+      ...options
     });
+    this.maxNumberLength =
+      options.maxNumberLength ?? DEFAULT_TOKENIZER_MAX_NUMBER_LENGTH;
+    this.maxStringLength =
+      options.maxStringLength ?? DEFAULT_TOKENIZER_MAX_STRING_LENGTH;
   }
 
   isEOF(): boolean {
@@ -44,12 +62,15 @@ export class Tokenizer extends Transform implements TokenizerBase {
   }
 
   private scanNumericLiteral() {
-    const numericScanner = new DigitConsumer(this, 1);
+    const numericScanner = new DigitConsumer(this, this.maxNumberLength, 1);
     const consume = (): TokenResult => {
       if (numericScanner.consume()) {
         const value = this._buffer.slice(0, numericScanner.index);
         this._buffer = this._buffer.slice(numericScanner.index);
         return new TokenResult(TokenType.NumericLiteral, value);
+      } else if (numericScanner.state === DigitConsumerState.Failed) {
+        this._buffer = this._buffer.slice(numericScanner.index);
+        return new TokenResult(TokenType.Invalid, 'Too long number.');
       }
 
       return new PendingTokenResult(TokenType.Incomplete, consume);
@@ -59,12 +80,15 @@ export class Tokenizer extends Transform implements TokenizerBase {
   }
 
   private scanStringLiteral() {
-    const stringScanner = new StringConsumer(this, 1);
+    const stringScanner = new StringConsumer(this, this.maxStringLength, 1);
     const consume = (): TokenResult => {
       if (stringScanner.consume()) {
         const value = stringScanner.value;
         this._buffer = this._buffer.slice(stringScanner.index);
         return new TokenResult(TokenType.StringLiteral, value);
+      } else if (stringScanner.state === StringConsumerState.Failed) {
+        this._buffer = this._buffer.slice(stringScanner.index);
+        return new TokenResult(TokenType.Invalid, 'Too long string.');
       }
 
       return new PendingTokenResult(TokenType.Incomplete, consume);
@@ -145,7 +169,7 @@ export class Tokenizer extends Transform implements TokenizerBase {
       return scanResult;
     }
 
-    return new TokenResult(TokenType.Invalid, String.fromCharCode(item));
+    return new TokenResult(TokenType.Invalid, 'Unexpected token.');
   }
 
   _transform(chunk: Buffer, encoding: string, callback: TransformCallback) {
