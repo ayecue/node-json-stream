@@ -20,12 +20,43 @@ export type OnResolveCallback = (data: any) => void;
 export class ResolveContext {
   resolvePath: string[];
   onResolve: OnResolveCallback;
-};
+}
 
 export interface BaseConsumerOptions {
-  currentPath?: string[];
-  resolveContext: ResolveContext;
+  currentPath?: string;
+  resolveContext?: ResolveContext;
 }
+
+export const isMatchingPath = (
+  path: string,
+  resolveContext: ResolveContext
+): boolean => {
+  const segments = path.length === 0 ? [] : path.split('.');
+
+  if (segments.length === resolveContext.resolvePath.length) {
+    return resolveContext.resolvePath.every((item, index) => {
+      if (item === '*') return true;
+      return item === segments[index];
+    });
+  }
+
+  return false;
+};
+
+export const shouldPassResolveContext = (
+  path: string,
+  resolveContext: ResolveContext = null
+): boolean => {
+  if (resolveContext === null) return false;
+  const segments = path.length === 0 ? [] : path.split('.');
+  if (segments.length <= resolveContext.resolvePath.length) {
+    return segments.every((item, index) => {
+      if (segments[index] === '*') return true;
+      return item === segments[index];
+    });
+  }
+  return false;
+};
 
 export class BaseConsumer {
   protected _data: any = null;
@@ -34,14 +65,17 @@ export class BaseConsumer {
   protected _type: ConsumerType = ConsumerType.Unknown;
   protected _lastError: Error | null;
 
-  protected _currentPath: string[];
+  protected _currentPath: string | null;
   protected _resolveCallback: OnResolveCallback | null;
 
   constructor(options: BaseConsumerOptions) {
-    this._currentPath = options.currentPath ?? [];
+    this._currentPath = options.currentPath ?? null;
     this._resolveCallback = null;
 
-    if (options.resolveContext.resolvePath.join('.') === this._currentPath.join('.')) {
+    if (
+      options.resolveContext &&
+      isMatchingPath(this._currentPath, options.resolveContext)
+    ) {
       this._resolveCallback = options.resolveContext.onResolve;
     }
   }

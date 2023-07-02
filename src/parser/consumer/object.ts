@@ -1,6 +1,11 @@
 import { TokenResult, TokenType } from '../../tokenizer/tokenizer-base';
 import { parse } from '../parse';
-import { BaseConsumerOptions, ConsumerState, ConsumerType, ResolveContext } from './base';
+import {
+  BaseConsumerOptions,
+  ConsumerState,
+  ConsumerType,
+  ResolveContext
+} from './base';
 import { PendingConsumer } from './pending';
 
 export enum ObjectConsumerState {
@@ -81,7 +86,13 @@ export class ObjectConsumer extends PendingConsumer {
           break;
         }
         case ObjectConsumerState.WaitingForValue: {
-          const result = parse(item, this._resolveContext, [...this._currentPath, this._lastKey]);
+          const result = parse(
+            item,
+            this._resolveContext,
+            this._currentPath
+              ? this._currentPath + '.' + this._lastKey
+              : this._lastKey
+          );
 
           if (result === null) {
             this._state = ConsumerState.Failed;

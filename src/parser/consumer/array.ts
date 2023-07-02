@@ -1,6 +1,11 @@
 import { TokenResult, TokenType } from '../../tokenizer/tokenizer-base';
 import { parse } from '../parse';
-import { BaseConsumerOptions, ConsumerState, ConsumerType, ResolveContext } from './base';
+import {
+  BaseConsumerOptions,
+  ConsumerState,
+  ConsumerType,
+  ResolveContext
+} from './base';
 import { PendingConsumer } from './pending';
 
 export enum ArrayConsumerState {
@@ -22,7 +27,7 @@ export class ArrayConsumer extends PendingConsumer {
     super(options);
     this._resolveContext = options.resolveContext;
   }
-  
+
   consume(item: TokenResult): boolean {
     if (this._pending !== null) {
       if (this._pending.consume(item)) {
@@ -58,7 +63,13 @@ export class ArrayConsumer extends PendingConsumer {
           }
         }
         case ArrayConsumerState.WaitingForValue: {
-          const result = parse(item, this._resolveContext, [...this._currentPath, this._data.length.toString()]);
+          const result = parse(
+            item,
+            this._resolveContext,
+            this._currentPath
+              ? this._currentPath + '.' + this._data.length
+              : this._data.length.toString()
+          );
 
           if (result === null) {
             this._state = ConsumerState.Failed;

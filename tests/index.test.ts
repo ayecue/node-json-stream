@@ -141,5 +141,27 @@ describe('json-stream', function () {
       testStream.write(JSON.stringify({ name: "test" }));
       testStream.write('\n' + JSON.stringify({ name: "bar" }));
     });
+
+    test('use resolve path option to only get number', function (done) {
+      parser.resolvePath = ['myNumber'];
+
+      parser.on('data', (data) => {
+        expect(data).toEqual(123);
+        done();
+      });
+
+      testStream.write(JSON.stringify({ name: "foo", myNumber: 123 }));
+    });
+
+    test('use resolve path option to get items in array', function (done) {
+      parser.resolvePath = ['myArray', '*'];
+
+      parser.on('data', (data) => {
+        expect(data).toBeLessThanOrEqual(5);
+        if (data === 5) done();
+      });
+
+      testStream.write(JSON.stringify({ name: "foo", myArray: [1,2,3,4,5] }));
+    });
   });
 });
