@@ -1,10 +1,11 @@
 {
   "name": "node-json-stream",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "JSON stream parsing library.",
   "main": "dist/index",
   "typings": "dist/index",
   "scripts": {
+    "prepublishOnly": "npm run build",
     "dev": "ts-node ./src/index.ts",
     "watch": "ts-node-dev ./src/index.ts --watch",
     "bench": "ts-node ./benchmark/index.ts",
