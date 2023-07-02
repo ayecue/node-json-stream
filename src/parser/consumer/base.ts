@@ -16,12 +16,35 @@ export enum ConsumerType {
   Array = 'array'
 }
 
+export type OnResolveCallback = (data: any) => void;
+export class ResolveContext {
+  resolvePath: string[];
+  onResolve: OnResolveCallback;
+};
+
+export interface BaseConsumerOptions {
+  currentPath?: string[];
+  resolveContext: ResolveContext;
+}
+
 export class BaseConsumer {
   protected _data: any = null;
   protected _size: number = 0;
   protected _state: ConsumerState = ConsumerState.Pending;
   protected _type: ConsumerType = ConsumerType.Unknown;
   protected _lastError: Error | null;
+
+  protected _currentPath: string[];
+  protected _resolveCallback: OnResolveCallback | null;
+
+  constructor(options: BaseConsumerOptions) {
+    this._currentPath = options.currentPath ?? [];
+    this._resolveCallback = null;
+
+    if (options.resolveContext.resolvePath.join('.') === this._currentPath.join('.')) {
+      this._resolveCallback = options.resolveContext.onResolve;
+    }
+  }
 
   consume(_item: TokenResult): boolean {
     this._state = ConsumerState.Done;

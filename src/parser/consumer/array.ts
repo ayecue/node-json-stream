@@ -1,6 +1,6 @@
 import { TokenResult, TokenType } from '../../tokenizer/tokenizer-base';
 import { parse } from '../parse';
-import { ConsumerState, ConsumerType } from './base';
+import { BaseConsumerOptions, ConsumerState, ConsumerType, ResolveContext } from './base';
 import { PendingConsumer } from './pending';
 
 export enum ArrayConsumerState {
@@ -16,7 +16,13 @@ export class ArrayConsumer extends PendingConsumer {
   protected _type: ConsumerType = ConsumerType.Array;
 
   private _arrayState: ArrayConsumerState = ArrayConsumerState.Initial;
+  private _resolveContext: ResolveContext;
 
+  constructor(options: BaseConsumerOptions) {
+    super(options);
+    this._resolveContext = options.resolveContext;
+  }
+  
   consume(item: TokenResult): boolean {
     if (this._pending !== null) {
       if (this._pending.consume(item)) {
@@ -47,11 +53,12 @@ export class ArrayConsumer extends PendingConsumer {
         case ArrayConsumerState.AfterInitial: {
           if (item.type === TokenType.Punctuator && item.value === ']') {
             this._state = ConsumerState.Done;
+            this._resolveCallback?.(this._data);
             break;
           }
         }
         case ArrayConsumerState.WaitingForValue: {
-          const result = parse(item);
+          const result = parse(item, this._resolveContext, [...this._currentPath, this._data.length.toString()]);
 
           if (result === null) {
             this._state = ConsumerState.Failed;
@@ -74,6 +81,7 @@ export class ArrayConsumer extends PendingConsumer {
         case ArrayConsumerState.WaitingForComma: {
           if (item.type === TokenType.Punctuator && item.value === ']') {
             this._state = ConsumerState.Done;
+            this._resolveCallback?.(this._data);
             break;
           }
           if (item.value !== ',') {

@@ -13,6 +13,7 @@ export interface ParserOptions extends TransformOptions {
   maxPayloadByteSize?: number;
   allowedRootElements?: ConsumerType[];
   usesSeparator?: boolean;
+  resolvePath?: string[];
 }
 
 export const DEFAULT_PARSER_MAX_PAYLOAD_BYTE_SIZE = 1024 * 4;
@@ -34,6 +35,7 @@ export class Parser extends Transform {
   public maxPayloadByteSize: number;
   public allowedRootElements: ConsumerType[];
   public usesSeparator: boolean;
+  public resolvePath: string[];
 
   constructor(options: ParserOptions = {}) {
     super({
@@ -48,6 +50,7 @@ export class Parser extends Transform {
       ...DEFAULT_PARSER_ALLOWED_ROOT_ELEMENTS
     ];
     this.usesSeparator = options.usesSeparator ?? DEFAULT_PARSER_USES_SEPERATOR;
+    this.resolvePath = options.resolvePath ?? [];
   }
 
   _parsingError(message: string, callback: TransformCallback) {
@@ -87,7 +90,10 @@ export class Parser extends Transform {
     }
 
     if (!this._root) {
-      this._root = parse(item);
+      this._root = parse(item, {
+        resolvePath: this.resolvePath,
+        onResolve: (data) => this.emit('data', data)
+      });
 
       if (this._root === null) {
         return this._parsingError(
@@ -103,7 +109,6 @@ export class Parser extends Transform {
     }
 
     if (this._root.consume(item)) {
-      this.emit('data', this._root.data);
       return this._complete(callback);
     } else if (this._root.state === ConsumerState.Failed) {
       return this._parsingError(

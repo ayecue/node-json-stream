@@ -8,6 +8,7 @@ export class NilConsumer extends BaseConsumer {
 
   consume(_item: TokenResult): boolean {
     this._state = ConsumerState.Done;
+    this._resolveCallback?.(null);
     return true;
   }
 }

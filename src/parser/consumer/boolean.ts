@@ -9,6 +9,7 @@ export class BooleanConsumer extends BaseConsumer {
   consume(item: TokenResult): boolean {
     this._data = item.value === 'true';
     this._state = ConsumerState.Done;
+    this._resolveCallback?.(this._data);
     return true;
   }
 }

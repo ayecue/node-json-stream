@@ -1,6 +1,6 @@
 import { TokenResult, TokenType } from '../../tokenizer/tokenizer-base';
 import { parse } from '../parse';
-import { ConsumerState, ConsumerType } from './base';
+import { BaseConsumerOptions, ConsumerState, ConsumerType, ResolveContext } from './base';
 import { PendingConsumer } from './pending';
 
 export enum ObjectConsumerState {
@@ -19,6 +19,12 @@ export class ObjectConsumer extends PendingConsumer {
 
   private _objectState: ObjectConsumerState = ObjectConsumerState.Initial;
   private _lastKey: string;
+  private _resolveContext: ResolveContext;
+
+  constructor(options: BaseConsumerOptions) {
+    super(options);
+    this._resolveContext = options.resolveContext;
+  }
 
   consume(item: TokenResult): boolean {
     if (this._pending !== null) {
@@ -50,6 +56,7 @@ export class ObjectConsumer extends PendingConsumer {
         case ObjectConsumerState.AfterInitial: {
           if (item.type === TokenType.Punctuator && item.value === '}') {
             this._state = ConsumerState.Done;
+            this._resolveCallback?.(this._data);
             break;
           }
         }
@@ -74,7 +81,7 @@ export class ObjectConsumer extends PendingConsumer {
           break;
         }
         case ObjectConsumerState.WaitingForValue: {
-          const result = parse(item);
+          const result = parse(item, this._resolveContext, [...this._currentPath, this._lastKey]);
 
           if (result === null) {
             this._state = ConsumerState.Failed;
@@ -98,6 +105,7 @@ export class ObjectConsumer extends PendingConsumer {
         case ObjectConsumerState.WaitingForComma: {
           if (item.type === TokenType.Punctuator && item.value === '}') {
             this._state = ConsumerState.Done;
+            this._resolveCallback?.(this._data);
             break;
           }
           if (item.value !== ',') {
