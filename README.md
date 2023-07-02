@@ -1,5 +1,9 @@
 # node-json-stream
 
+[![npm version](https://badge.fury.io/js/node-json-stream.svg)](https://www.npmjs.com/package/node-json-stream)
+[![npm monthly downloads](https://img.shields.io/npm/dm/node-json-stream.svg)](https://www.npmjs.com/package/node-json-stream)
+[![node-json-stream](https://circleci.com/gh/ayecue/node-json-stream.svg?style=svg)](https://circleci.com/gh/ayecue/node-json-stream)
+
 Introducing a rapid, lightweight, and self-contained JSON parsing library specifically designed for stream-based processing. This library adheres completely to the JSON specification.
 
 ## Usage
