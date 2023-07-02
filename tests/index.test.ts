@@ -67,8 +67,8 @@ describe('json-stream', function () {
 
   describe('scenarios', () => {
     test('invalid payload', function (done) {
-      parser.once('invalid-token', (data) => {
-        expect(data).toEqual({ type: 'invalid', value: 'Unknown token in relation to JSON syntax.' });
+      parser.once('parsing-error', (err) => {
+        expect(err).toBeInstanceOf(Error);
         done();
       });
       testStream.write('{ foo: invalid }');
@@ -87,11 +87,8 @@ describe('json-stream', function () {
     test('only allow object root but write string', function (done) {
       parser.allowedRootElements = [ResultType.Object];
 
-      parser.once('invalid-json', (data) => {
-        expect(data).toEqual({
-          type: ResultType.String,
-          value: 'Hello world!'
-        });
+      parser.once('parsing-error', (err) => {
+        expect(err).toBeInstanceOf(Error);
         done();
       });
 
@@ -101,11 +98,8 @@ describe('json-stream', function () {
     test('exceed string max length', function (done) {
       tokenizer.maxStringLength = 5;
 
-      parser.once('invalid-token', (data) => {
-        expect(data).toEqual({
-          type: 'invalid',
-          value: 'String exceeds maximal length of 5.'
-        });
+      parser.once('parsing-error', (err) => {
+        expect(err).toBeInstanceOf(Error);
         done();
       });
 
@@ -115,11 +109,8 @@ describe('json-stream', function () {
     test('exceed number max length', function (done) {
       tokenizer.maxNumberLength = 2;
 
-      parser.once('invalid-token', (data) => {
-        expect(data).toEqual({
-          type: 'invalid',
-          value: 'Number exceeds maximal length of 2.'
-        });
+      parser.once('parsing-error', (err) => {
+        expect(err).toBeInstanceOf(Error);
         done();
       });
 

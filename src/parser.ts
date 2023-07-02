@@ -41,7 +41,7 @@ export class Parser extends Transform {
 
   _transform(item: TokenResult, encoding: string, callback: TransformCallback) {
     if (item.type === TokenType.Invalid) {
-      this.emit('invalid-token', item);
+      this.emit('parsing-error', new Error(`Invalid token with "${item.value}" as value.`));
       callback(null);
       return;
     }
@@ -56,10 +56,10 @@ export class Parser extends Transform {
       this.emit('data', this._root.data);
       this._root = null;
     } else if (this._root.state === ConsumerState.Failed) {
-      this.emit('invalid-json', item);
+      this.emit('parsing-error', new Error(`Invalid JSON caused by "${item.value}".`));
       this._root = null;
     } else if (this._root.size > this.maxPayloadByteSize) {
-      this.emit('payload-exceeded');
+      this.emit('error', new Error(`JSON payload exceeds ${this.maxPayloadByteSize} bytes.`));
       this._root = null;
     }
 
