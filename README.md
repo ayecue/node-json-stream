@@ -36,6 +36,7 @@ new Parser({
   /**
     Define maximum payload size, if exceeded parser
     will parsing-error event.
+
     By default uses 4096.
   */
   maxPayloadByteSize: 1000,
@@ -43,6 +44,7 @@ new Parser({
     Define types that are allowed for the root element,
     if the root element is not in the list it'll emit
     a parsing-error event.
+
     By default contains Array, Object, String, Number, Boolean
   */
   allowedRootElements: [ConsumerType.Object],
@@ -51,9 +53,17 @@ new Parser({
     token send by the tokenizer, if set to true the
     parser will always wait for the separator token
     after parsing of an object is done.
+
     By default set to false.
   */
-  usesSeparator: true
+  usesSeparator: true,
+  /**
+    Define which path the parser should return. Asterisk
+    can be used as wildcard.
+
+    By default set to null.
+  */
+  resolvePath: ['myPath', '*']
 })
 ```
 
@@ -65,6 +75,7 @@ new Tokenizer({
     Define maximum number length, if the number length
     is exceeded the toknizer will push a invalid token
     type to the parser.
+
     Uses 20 by default.
   */
   maxNumberLength: 5,
@@ -72,6 +83,7 @@ new Tokenizer({
     Define maximum string length, if the string length
     is exceeded the toknizer will push a invalid token
     type to the parser.
+
     Uses 1000 by default.
   */
   maxStringLength: 10,
@@ -209,7 +221,7 @@ myStream.write(JSON.stringify({
 }));
 ```
 
-**Send multiple different JSON but only allow object**
+**Send multiple different JSONs but only allow object**
 
 ```ts
 import { Parser, Tokenizer, ConsumerType } from 'node-json-stream';
@@ -246,5 +258,31 @@ myStream.write(JSON.stringify({
   data: {
     message: 'Hello world!',
   }
+}));
+```
+
+**Send JSON but only resolve data in message path**
+
+```ts
+import { Parser, Tokenizer } from 'node-json-stream';
+import { chain } from 'stream-chain';
+
+const myStream = chain([
+  new Tokenizer(),
+  new Parser({ resolvePath: ['data', '*', 'message'] })
+]);
+
+myStream.on('data', (payload) => {
+  /* will print "hello world!" and "another hello world!" */
+  console.log('myData', payload);
+});
+
+myStream.write(JSON.stringify({
+  method: 'test',
+  data: [{
+    'message': "hello world!"
+  }, {
+    'message': "another hello world!"
+  }]
 }));
 ```
