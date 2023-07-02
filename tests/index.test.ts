@@ -116,17 +116,16 @@ describe('json-stream', function () {
 
       testStream.write(JSON.stringify(123));
     });
+
+    test('exceed max payload size', function (done) {
+      parser.maxPayloadByteSize = 50;
+
+      parser.once('parsing-error', (err) => {
+        expect(err).toBeInstanceOf(Error);
+        done();
+      });
+
+      testStream.write(JSON.stringify(DefaultPayload));
+    });
   });
 });
-
-/**
- * 
- * 
-    parser.on('invalid-json', (err) => {
-      console.log('InvalidJSON', err);
-    });
-    
-    parser.on('invalid-token', (err) => {
-      console.log('InvalidToken', err);
-    });
- */
