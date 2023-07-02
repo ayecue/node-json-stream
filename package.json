@@ -1,8 +1,9 @@
 {
   "name": "node-json-stream",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "0.1.0",
+  "description": "JSON stream parsing library.",
+  "main": "dist/index",
+  "typings": "dist/index",
   "scripts": {
     "dev": "ts-node ./src/index.ts",
     "watch": "ts-node-dev ./src/index.ts --watch",
@@ -19,6 +20,11 @@
   "bugs": {
     "url": "https://github.com/ayecue/node-json-stream/issues"
   },
+  "keywords": [
+    "parse",
+    "json",
+    "stream"
+  ],
   "devDependencies": {
     "@types/jest": "^29.5.2",
     "@types/node": "^12.12.0",
