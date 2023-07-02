@@ -2,7 +2,7 @@ import Chain from 'stream-chain';
 
 import {
   Parser as JsonStreamParser,
-  ResultType,
+  ConsumerType,
   Tokenizer
 } from '../src/index';
 import DefaultPayload from './mocks/default-payload.json';
@@ -85,7 +85,7 @@ describe('json-stream', function () {
     });
 
     test('only allow object root but write string', function (done) {
-      parser.allowedRootElements = [ResultType.Object];
+      parser.allowedRootElements = [ConsumerType.Object];
 
       parser.once('parsing-error', (err) => {
         expect(err).toBeInstanceOf(Error);

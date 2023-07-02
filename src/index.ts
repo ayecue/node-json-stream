@@ -1,2 +1,2 @@
-export { Parser, ResultType } from './parser';
+export { ConsumerType, Parser } from './parser';
 export { Tokenizer } from './tokenizer';
