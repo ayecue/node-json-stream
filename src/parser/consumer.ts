@@ -21,7 +21,7 @@ export class ResolveResult {
   protected _size: number;
   protected _type: ResultType;
 
-  constructor(type: ResultType, data: any = null, size: number = 0) {
+  constructor(type: ResultType, data: any, size: number) {
     this._type = type;
     this._data = data;
     this._size = size;
@@ -44,7 +44,7 @@ export class PendingResolveResult extends ResolveResult {
   private pending: Consumer;
 
   constructor(type: ResultType, pending: Consumer) {
-    super(type);
+    super(type, null, 0);
     this.pending = pending;
   }
 
@@ -94,12 +94,12 @@ export class Consumer {
         );
       }
       case TokenType.NilLiteral: {
-        return new ResolveResult(ResultType.Null, null);
+        return new ResolveResult(ResultType.Null, null, 0);
       }
       default: {
         this._state = ConsumerState.Failed;
         this._errors.push('Unexpected type.');
-        return new ResolveResult(ResultType.Null, null);
+        return new ResolveResult(ResultType.Null, null, 0);
       }
     }
   }

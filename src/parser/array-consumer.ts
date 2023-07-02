@@ -66,7 +66,7 @@ export class ArrayConsumer extends Consumer {
             break;
           }
           this._data.push(result.data);
-          this._size += result.data.size;
+          this._size += result.size;
           this._arrayState = ArrayConsumerState.WaitingForComma;
           break;
         }
