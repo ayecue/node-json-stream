@@ -66,30 +66,24 @@ export class Parser extends Transform {
         callback(null);
         return;
       }
-
-      this._root.on('resolve', (result: BaseConsumer) => {
-        if (!this.allowedRootElements.includes(result.type)) {
-          this.emit(
-            'parsing-error',
-            new Error(`Forbidden root type "${result.type}".`)
-          );
-          return;
-        }
-
-        this.emit('data', result.data);
-      });
-
-      this._root.on('error', (err: Error) => {
-        this.emit(
-          'parsing-error',
-          new Error(`Invalid JSON caused by "${err.message}".`)
-        );
-      });
     }
 
     if (this._root.consume(item)) {
+      if (!this.allowedRootElements.includes(this._root.type)) {
+        this.emit(
+          'parsing-error',
+          new Error(`Forbidden root type "${this._root.type}".`)
+        );
+        callback(null);
+        return;
+      }
+      this.emit('data', this._root.data);
       this._root = null;
     } else if (this._root.state === ConsumerState.Failed) {
+      this.emit(
+        'parsing-error',
+        new Error(`Invalid JSON caused by "${this._root.lastError.message}".`)
+      );
       this._root = null;
     } else if (this._root.size > this.maxPayloadByteSize) {
       this.emit(

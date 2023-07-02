@@ -9,7 +9,6 @@ export class StringConsumer extends BaseConsumer {
     this._data = item.value;
     this._size = Buffer.byteLength(item.value);
     this._state = ConsumerState.Done;
-    this.emit('resolve', this);
     return true;
   }
 }

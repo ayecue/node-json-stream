@@ -1,6 +1,6 @@
 import { TokenResult, TokenType } from '../../tokenizer/tokenizer-base';
 import { parse } from '../parse';
-import { BaseConsumer, ConsumerState, ConsumerType } from './base';
+import { ConsumerState, ConsumerType } from './base';
 import { PendingConsumer } from './pending';
 
 export enum ObjectConsumerState {
@@ -23,9 +23,14 @@ export class ObjectConsumer extends PendingConsumer {
   consume(item: TokenResult): boolean {
     if (this._pending !== null) {
       if (this._pending.consume(item)) {
+        this._data[this._lastKey] = this._pending.data;
+        this._size += this._pending.size;
         this._objectState = ObjectConsumerState.WaitingForComma;
         this._pendingSize = 0;
         this._pending = null;
+      } else if (this._pending.state === ConsumerState.Failed) {
+        this._state = ConsumerState.Failed;
+        this._lastError = this._pending.lastError;
       } else {
         this._pendingSize = this._pending.size;
       }
@@ -34,9 +39,8 @@ export class ObjectConsumer extends PendingConsumer {
         case ObjectConsumerState.Initial: {
           if (item.type !== TokenType.Punctuator || item.value !== '{') {
             this._state = ConsumerState.Failed;
-            this.emit(
-              'error',
-              new Error('Object requires opening curly brackets.')
+            this._lastError = new Error(
+              'Object requires opening curly brackets.'
             );
             break;
           }
@@ -46,14 +50,13 @@ export class ObjectConsumer extends PendingConsumer {
         case ObjectConsumerState.AfterInitial: {
           if (item.type === TokenType.Punctuator && item.value === '}') {
             this._state = ConsumerState.Done;
-            this.emit('resolve', this);
             break;
           }
         }
         case ObjectConsumerState.WaitingForKey: {
           if (item.type !== TokenType.StringLiteral) {
             this._state = ConsumerState.Failed;
-            this.emit('error', new Error('Object key has to be string.'));
+            this._lastError = new Error('Object key has to be string.');
             break;
           }
           this._lastKey = item.value;
@@ -64,7 +67,7 @@ export class ObjectConsumer extends PendingConsumer {
         case ObjectConsumerState.WaitingForDelimiter: {
           if (item.value !== ':') {
             this._state = ConsumerState.Failed;
-            this.emit('error', new Error('Expected delimiter in object.'));
+            this._lastError = new Error('Expected delimiter in object.');
             break;
           }
           this._objectState = ObjectConsumerState.WaitingForValue;
@@ -75,7 +78,7 @@ export class ObjectConsumer extends PendingConsumer {
 
           if (result === null) {
             this._state = ConsumerState.Failed;
-            this.emit('error', new Error('Invalid value in object.'));
+            this._lastError = new Error('Invalid value in object.');
             break;
           }
 
@@ -85,19 +88,9 @@ export class ObjectConsumer extends PendingConsumer {
             this._objectState = ObjectConsumerState.WaitingForComma;
           } else if (result.state === ConsumerState.Failed) {
             this._state = ConsumerState.Failed;
-            this.emit('error', new Error('Failed to parse value in object.'));
+            this._lastError = new Error('Failed to parse value in object.');
           } else {
             this._pending = result;
-
-            result.on('resolve', (consumer: BaseConsumer) => {
-              this._data[this._lastKey] = consumer.data;
-              this._size += consumer.size;
-            });
-
-            result.on('error', (err: Error) => {
-              this._state = ConsumerState.Failed;
-              this.emit('error', err);
-            });
           }
 
           break;
@@ -105,12 +98,11 @@ export class ObjectConsumer extends PendingConsumer {
         case ObjectConsumerState.WaitingForComma: {
           if (item.type === TokenType.Punctuator && item.value === '}') {
             this._state = ConsumerState.Done;
-            this.emit('resolve', this);
             break;
           }
           if (item.value !== ',') {
             this._state = ConsumerState.Failed;
-            this.emit('error', new Error('Expected comma in object.'));
+            this._lastError = new Error('Expected comma in object.');
             break;
           }
           this._objectState = ObjectConsumerState.WaitingForKey;

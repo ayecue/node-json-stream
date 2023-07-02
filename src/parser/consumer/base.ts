@@ -1,5 +1,3 @@
-import { EventEmitter } from 'events';
-
 import { TokenResult } from '../../tokenizer/tokenizer-base';
 
 export enum ConsumerState {
@@ -18,15 +16,15 @@ export enum ConsumerType {
   Array = 'array'
 }
 
-export class BaseConsumer extends EventEmitter {
+export class BaseConsumer {
   protected _data: any = null;
   protected _size: number = 0;
   protected _state: ConsumerState = ConsumerState.Pending;
   protected _type: ConsumerType = ConsumerType.Unknown;
+  protected _lastError: Error | null;
 
   consume(_item: TokenResult): boolean {
     this._state = ConsumerState.Done;
-    this.emit('resolve', null);
     return true;
   }
 
@@ -44,5 +42,9 @@ export class BaseConsumer extends EventEmitter {
 
   get type(): ConsumerType {
     return this._type;
+  }
+
+  get lastError(): Error {
+    return this._lastError;
   }
 }
