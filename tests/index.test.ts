@@ -129,7 +129,7 @@ describe('json-stream', function () {
     });
 
     test('use seperator and skip object', function (done) {
-      parser.usesSeperator = true;
+      parser.usesSeparator = true;
 
       let counter = 0;
 

@@ -12,7 +12,7 @@ import { TokenResult, TokenType } from './tokenizer/tokenizer-base';
 export interface ParserOptions extends TransformOptions {
   maxPayloadByteSize?: number;
   allowedRootElements?: ConsumerType[];
-  usesSeperator?: boolean;
+  usesSeparator?: boolean;
 }
 
 export const DEFAULT_PARSER_MAX_PAYLOAD_BYTE_SIZE = 1024 * 4;
@@ -33,7 +33,7 @@ export class Parser extends Transform {
 
   public maxPayloadByteSize: number;
   public allowedRootElements: ConsumerType[];
-  public usesSeperator: boolean;
+  public usesSeparator: boolean;
 
   constructor(options: ParserOptions = {}) {
     super({
@@ -47,7 +47,7 @@ export class Parser extends Transform {
     this.allowedRootElements = options.allowedRootElements ?? [
       ...DEFAULT_PARSER_ALLOWED_ROOT_ELEMENTS
     ];
-    this.usesSeperator = options.usesSeperator ?? DEFAULT_PARSER_USES_SEPERATOR;
+    this.usesSeparator = options.usesSeparator ?? DEFAULT_PARSER_USES_SEPERATOR;
   }
 
   _parsingError(message: string, callback: TransformCallback) {
@@ -58,14 +58,18 @@ export class Parser extends Transform {
   _complete(callback: TransformCallback) {
     this._root = null;
 
-    if (this.usesSeperator) {
+    if (this.usesSeparator) {
       this._waitingForSeperator = true;
     }
 
     callback(null);
   }
 
-  _transform(item: TokenResult, encoding: string, callback: TransformCallback) {
+  _transform(
+    item: TokenResult,
+    _encoding: string,
+    callback: TransformCallback
+  ) {
     if (this._waitingForSeperator) {
       if (item.type === TokenType.Seperator) {
         this._waitingForSeperator = false;
@@ -90,16 +94,15 @@ export class Parser extends Transform {
           `Invalid starter token with "${item.value}" as value.`,
           callback
         );
-      }
-    }
-
-    if (this._root.consume(item)) {
-      if (!this.allowedRootElements.includes(this._root.type)) {
+      } else if (!this.allowedRootElements.includes(this._root.type)) {
         return this._parsingError(
           `Forbidden root type "${this._root.type}".`,
           callback
         );
       }
+    }
+
+    if (this._root.consume(item)) {
       this.emit('data', this._root.data);
       return this._complete(callback);
     } else if (this._root.state === ConsumerState.Failed) {

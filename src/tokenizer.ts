@@ -188,7 +188,7 @@ export class Tokenizer extends Transform implements TokenizerBase {
 
     return new TokenResult(
       TokenType.Invalid,
-      'Unknown token in relation to JSON syntax.'
+      'Unknown token in relation to JSON specification.'
     );
   }
 
