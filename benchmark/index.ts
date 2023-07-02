@@ -52,7 +52,6 @@ const jsonStreamPerf = (done: () => void, count: number = 20) => {
   }
 };
 
-
 const benchmark = new Benchmarkify("Json Perf").printHeader();
 const bench1 = benchmark.createSuite("Increment integer");
 
