@@ -33,12 +33,23 @@ pass.write(JSON.stringify({
 
 ```ts
 new Parser({
-  //define maximum payload size, if exceeded parser will parsing-error event
-  maxPayloadByteSize: 1000, //by default 4096
-  //define types that are allowed for the root element, if the root element is not in the list it'll emit a parsing-error event
-  allowedRootElements: [ConsumerType.Object], //by default contains Array, Object, String, Number, Boolean
-  //define if parser should recognize the separator token send by the tokenizer, if set to true the parser will always wait for the separator token after parsing of an object is done
-  usesSeparator: true //by default set to false
+  /**
+    Define maximum payload size, if exceeded parser will parsing-error event.
+    By default uses 4096.
+  */
+  maxPayloadByteSize: 1000,
+  /**
+    Define types that are allowed for the root element, if the root element is not in the list it'll emit a parsing-error event.
+    By default contains Array, Object, String, Number, Boolean
+  */
+  allowedRootElements: [ConsumerType.Object],
+  /**
+    Define if parser should recognize the separator token send by the tokenizer, if
+    set to true the parser will always wait for the separator token after parsing
+    of an object is done.
+    By default set to false.
+  */
+  usesSeparator: true
 })
 ```
 
@@ -46,12 +57,21 @@ new Parser({
 
 ```ts
 new Tokenizer({
-  //define maximum number length, if the number length is exceeded the toknizer will push a invalid token type to the parser
-  maxNumberLength: 5, //by default 20
-  //define maximum string length, if the string length is exceeded the toknizer will push a invalid token type to the parser
-  maxStringLength: 10, //by default 1000
-  //define seperator character for tokenizer to forward to parser
-  seperatorCode: '%' //by default \n
+  /**
+    Define maximum number length, if the number length is exceeded the toknizer will push a invalid token type to the parser.
+    Uses 20 by default.
+  */
+  maxNumberLength: 5,
+  /**
+    Define maximum string length, if the string length is exceeded the toknizer will push a invalid token type to the parser.
+    Uses 1000 by default.
+  */
+  maxStringLength: 10,
+  /**
+    Define seperator character for tokenizer to forward to parser.
+    Uses \n by default.
+  */
+  seperatorCode: '%'
 })
 ```
 
@@ -69,7 +89,8 @@ const myStream = chain([
 ]);
 
 myStream.on('data', (payload) => {
-  console.log('myData', payload); //will print both objects
+  /* will print both objects */
+  console.log('myData', payload);
 });
 
 myStream.write(JSON.stringify({
@@ -99,7 +120,8 @@ const myStream = chain([
 ]);
 
 myStream.on('data', (payload) => {
-  console.log('myData', payload); //will print last object since it's valid
+  /* will print last object since it's valid */
+  console.log('myData', payload);
 });
 
 myStream.write('{ } w }}}');
@@ -124,7 +146,8 @@ const myStream = chain([
 ]);
 
 myStream.on('data', (payload) => {
-  console.log('myData', payload); //will print both objects
+  /* will print both objects */
+  console.log('myData', payload);
 });
 
 myStream.write(JSON.stringify({
@@ -152,7 +175,11 @@ const myStream = chain([
 ]);
 
 myStream.on('data', (payload) => {
-  console.log('myData', payload); //only prints the first object and last object due to missing a newline after the first object
+  /**
+    only prints the first object and last object due to missing a newline
+    after the first object
+  */
+  console.log('myData', payload);
 });
 
 myStream.write(JSON.stringify({
@@ -185,7 +212,10 @@ const myStream = chain([
 ]);
 
 myStream.on('data', (payload) => {
-  console.log('myData', payload); //only prints the objects and ignores the strings and number
+  /*
+    only prints the objects and ignores the strings and number
+  */
+  console.log('myData', payload);
 });
 
 myStream.write(JSON.stringify({
