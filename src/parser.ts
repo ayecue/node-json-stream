@@ -23,8 +23,8 @@ export { ResultType };
 export class Parser extends Transform {
   private _root: RootConsumer | null = null;
 
-  readonly maxPayloadByteSize: number;
-  readonly allowedRootElements: ResultType[];
+  public maxPayloadByteSize: number;
+  public allowedRootElements: ResultType[];
 
   constructor(options: ParserOptions = {}) {
     super({

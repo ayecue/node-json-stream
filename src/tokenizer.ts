@@ -25,8 +25,8 @@ export class Tokenizer extends Transform implements TokenizerBase {
   private _buffer: string = '';
   private _pending: PendingTokenResult | null = null;
 
-  readonly maxNumberLength: number;
-  readonly maxStringLength: number;
+  public maxNumberLength: number;
+  public maxStringLength: number;
 
   constructor(options: TokenizerOptions = {}) {
     super({

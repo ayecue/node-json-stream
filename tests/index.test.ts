@@ -1,5 +1,10 @@
-import { Parser as JsonStreamParser, Tokenizer } from '../src/index';
 import Chain from 'stream-chain';
+
+import {
+  Parser as JsonStreamParser,
+  ResultType,
+  Tokenizer
+} from '../src/index';
 import DefaultPayload from './mocks/default-payload.json';
 
 describe('json-stream', function () {
@@ -10,10 +15,7 @@ describe('json-stream', function () {
   beforeEach(() => {
     tokenizer = new Tokenizer();
     parser = new JsonStreamParser();
-    testStream = Chain.chain([
-      tokenizer,
-      parser
-    ]);
+    testStream = Chain.chain([tokenizer, parser]);
   });
 
   describe('default', () => {
@@ -22,25 +24,25 @@ describe('json-stream', function () {
         expect(data).toEqual(DefaultPayload);
         done();
       });
-  
+
       testStream.write(JSON.stringify(DefaultPayload));
     });
-  
+
     test('root > string', function (done) {
       testStream.on('data', (data) => {
         expect(data).toEqual(DefaultPayload.data.message);
         done();
       });
-  
+
       testStream.write(JSON.stringify(DefaultPayload.data.message));
     });
-  
+
     test('root > boolean', function (done) {
       testStream.on('data', (data) => {
         expect(data).toEqual(true);
         done();
       });
-  
+
       testStream.write(JSON.stringify(true));
     });
 
@@ -49,7 +51,7 @@ describe('json-stream', function () {
         expect(data).toEqual(DefaultPayload.data.floatingNumber);
         done();
       });
-  
+
       testStream.write(JSON.stringify(DefaultPayload.data.floatingNumber));
     });
 
@@ -58,27 +60,43 @@ describe('json-stream', function () {
         expect(data).toEqual(DefaultPayload.data.arr);
         done();
       });
-  
+
       testStream.write(JSON.stringify(DefaultPayload.data.arr));
     });
   });
 
-  test('invalid payload', function (done) {
-    parser.once('invalid-token', (data) => {
-      expect(data).toEqual({ type: 'invalid', value: 'Unexpected token.' })
-      done();
-    });
-    testStream.write('{ foo: invalid }');
-  });
-
-  test('invalid payload but recover anyway', function (done) {
-    testStream.on('data', (data) => {
-      expect(data).toEqual(DefaultPayload);
-      done();
+  describe('scenarios', () => {
+    test('invalid payload', function (done) {
+      parser.once('invalid-token', (data) => {
+        expect(data).toEqual({ type: 'invalid', value: 'Unexpected token.' });
+        done();
+      });
+      testStream.write('{ foo: invalid }');
     });
 
-    testStream.write('{ foo: invalid }');
-    testStream.write(JSON.stringify(DefaultPayload));
+    test('invalid payload but recover anyway', function (done) {
+      testStream.on('data', (data) => {
+        expect(data).toEqual(DefaultPayload);
+        done();
+      });
+
+      testStream.write('{ foo: invalid }');
+      testStream.write(JSON.stringify(DefaultPayload));
+    });
+
+    test('only allow object root but write string', function (done) {
+      parser.allowedRootElements = [ResultType.Object];
+
+      parser.once('invalid-json', (data) => {
+        expect(data).toEqual({
+          type: ResultType.String,
+          value: 'Hello world!'
+        });
+        done();
+      });
+
+      testStream.write(JSON.stringify('Hello world!'));
+    });
   });
 });
 
