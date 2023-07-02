@@ -70,7 +70,10 @@ export class Tokenizer extends Transform implements TokenizerBase {
         return new TokenResult(TokenType.NumericLiteral, value);
       } else if (numericScanner.state === DigitConsumerState.Failed) {
         this._buffer = this._buffer.slice(numericScanner.index);
-        return new TokenResult(TokenType.Invalid, 'Too long number.');
+        return new TokenResult(
+          TokenType.Invalid,
+          `Number exceeds maximal length of ${this.maxNumberLength}.`
+        );
       }
 
       return new PendingTokenResult(TokenType.Incomplete, consume);
@@ -88,7 +91,10 @@ export class Tokenizer extends Transform implements TokenizerBase {
         return new TokenResult(TokenType.StringLiteral, value);
       } else if (stringScanner.state === StringConsumerState.Failed) {
         this._buffer = this._buffer.slice(stringScanner.index);
-        return new TokenResult(TokenType.Invalid, 'Too long string.');
+        return new TokenResult(
+          TokenType.Invalid,
+          `String exceeds maximal length of ${this.maxStringLength}.`
+        );
       }
 
       return new PendingTokenResult(TokenType.Incomplete, consume);
@@ -169,7 +175,10 @@ export class Tokenizer extends Transform implements TokenizerBase {
       return scanResult;
     }
 
-    return new TokenResult(TokenType.Invalid, 'Unexpected token.');
+    return new TokenResult(
+      TokenType.Invalid,
+      'Unknown token in relation to JSON syntax.'
+    );
   }
 
   _transform(chunk: Buffer, encoding: string, callback: TransformCallback) {

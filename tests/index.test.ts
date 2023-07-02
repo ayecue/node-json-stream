@@ -68,7 +68,7 @@ describe('json-stream', function () {
   describe('scenarios', () => {
     test('invalid payload', function (done) {
       parser.once('invalid-token', (data) => {
-        expect(data).toEqual({ type: 'invalid', value: 'Unexpected token.' });
+        expect(data).toEqual({ type: 'invalid', value: 'Unknown token in relation to JSON syntax.' });
         done();
       });
       testStream.write('{ foo: invalid }');
@@ -96,6 +96,34 @@ describe('json-stream', function () {
       });
 
       testStream.write(JSON.stringify('Hello world!'));
+    });
+
+    test('exceed string max length', function (done) {
+      tokenizer.maxStringLength = 5;
+
+      parser.once('invalid-token', (data) => {
+        expect(data).toEqual({
+          type: 'invalid',
+          value: 'String exceeds maximal length of 5.'
+        });
+        done();
+      });
+
+      testStream.write(JSON.stringify('Hello world!'));
+    });
+
+    test('exceed number max length', function (done) {
+      tokenizer.maxNumberLength = 2;
+
+      parser.once('invalid-token', (data) => {
+        expect(data).toEqual({
+          type: 'invalid',
+          value: 'Number exceeds maximal length of 2.'
+        });
+        done();
+      });
+
+      testStream.write(JSON.stringify(123));
     });
   });
 });
