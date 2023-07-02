@@ -188,7 +188,6 @@ export class Tokenizer extends Transform implements TokenizerBase {
       if (current.type === TokenType.Invalid) {
         this._buffer = this._buffer.slice(1);
         this.emit('data', current);
-        break;
       } else if (current.type === TokenType.Incomplete) {
         this._pending = current;
         break;
