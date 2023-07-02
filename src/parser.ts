@@ -15,7 +15,7 @@ export interface ParserOptions extends TransformOptions {
   usesSeperator?: boolean;
 }
 
-export const DEFAULT_PARSER_MAX_PAYLOAD_BYTE_SIZE = 1024;
+export const DEFAULT_PARSER_MAX_PAYLOAD_BYTE_SIZE = 1024 * 4;
 export const DEFAULT_PARSER_ALLOWED_ROOT_ELEMENTS: ConsumerType[] = [
   ConsumerType.Array,
   ConsumerType.Object,
