@@ -12,6 +12,7 @@ import { TokenResult, TokenType } from './tokenizer/tokenizer-base';
 export interface ParserOptions extends TransformOptions {
   maxPayloadByteSize?: number;
   allowedRootElements?: ConsumerType[];
+  usesSeperator?: boolean;
 }
 
 export const DEFAULT_PARSER_MAX_PAYLOAD_BYTE_SIZE = 1024;
@@ -22,14 +23,17 @@ export const DEFAULT_PARSER_ALLOWED_ROOT_ELEMENTS: ConsumerType[] = [
   ConsumerType.Number,
   ConsumerType.Boolean
 ];
+export const DEFAULT_PARSER_USES_SEPERATOR = false;
 
 export { ConsumerType };
 
 export class Parser extends Transform {
   private _root: BaseConsumer | PendingConsumer | null = null;
+  private _waitingForSeperator: boolean = false;
 
   public maxPayloadByteSize: number;
   public allowedRootElements: ConsumerType[];
+  public usesSeperator: boolean;
 
   constructor(options: ParserOptions = {}) {
     super({
@@ -43,54 +47,71 @@ export class Parser extends Transform {
     this.allowedRootElements = options.allowedRootElements ?? [
       ...DEFAULT_PARSER_ALLOWED_ROOT_ELEMENTS
     ];
+    this.usesSeperator = options.usesSeperator ?? DEFAULT_PARSER_USES_SEPERATOR;
+  }
+
+  _parsingError(message: string, callback: TransformCallback) {
+    this.emit('parsing-error', new Error(message));
+    this._complete(callback);
+  }
+
+  _complete(callback: TransformCallback) {
+    this._root = null;
+
+    if (this.usesSeperator) {
+      this._waitingForSeperator = true;
+    }
+
+    callback(null);
   }
 
   _transform(item: TokenResult, encoding: string, callback: TransformCallback) {
-    if (item.type === TokenType.Invalid) {
-      this.emit(
-        'parsing-error',
-        new Error(`Invalid token with "${item.value}" as value.`)
+    if (this._waitingForSeperator) {
+      if (item.type === TokenType.Seperator) {
+        this._waitingForSeperator = false;
+      }
+      return callback(null);
+    }
+
+    if (item.type === TokenType.Seperator) {
+      return this._complete(callback);
+    } else if (item.type === TokenType.Invalid) {
+      return this._parsingError(
+        `Invalid token with "${item.value}" as value.`,
+        callback
       );
-      callback(null);
-      return;
     }
 
     if (!this._root) {
       this._root = parse(item);
 
       if (this._root === null) {
-        this.emit(
-          'parsing-error',
-          new Error(`Invalid starter token with "${item.value}" as value.`)
+        return this._parsingError(
+          `Invalid starter token with "${item.value}" as value.`,
+          callback
         );
-        callback(null);
-        return;
       }
     }
 
     if (this._root.consume(item)) {
       if (!this.allowedRootElements.includes(this._root.type)) {
-        this.emit(
-          'parsing-error',
-          new Error(`Forbidden root type "${this._root.type}".`)
+        return this._parsingError(
+          `Forbidden root type "${this._root.type}".`,
+          callback
         );
-        callback(null);
-        return;
       }
       this.emit('data', this._root.data);
-      this._root = null;
+      return this._complete(callback);
     } else if (this._root.state === ConsumerState.Failed) {
-      this.emit(
-        'parsing-error',
-        new Error(`Invalid JSON caused by "${this._root.lastError.message}".`)
+      return this._parsingError(
+        `Invalid JSON caused by "${this._root.lastError.message}".`,
+        callback
       );
-      this._root = null;
     } else if (this._root.size > this.maxPayloadByteSize) {
-      this.emit(
-        'parsing-error',
-        new Error(`JSON payload exceeds ${this.maxPayloadByteSize} bytes.`)
+      return this._parsingError(
+        `JSON payload exceeds ${this.maxPayloadByteSize} bytes.`,
+        callback
       );
-      this._root = null;
     }
 
     callback(null);

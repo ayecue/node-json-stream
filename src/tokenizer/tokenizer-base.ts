@@ -37,7 +37,8 @@ export enum TokenType {
   Punctuator = 'punc',
   BooleanLiteral = 'bool',
   NilLiteral = 'nil',
-  Incomplete = 'incomplete'
+  Incomplete = 'incomplete',
+  Seperator = 'seperator'
 }
 
 export const TokenTypeValues: string[] = Object.values(TokenType);

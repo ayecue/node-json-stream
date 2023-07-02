@@ -127,5 +127,19 @@ describe('json-stream', function () {
 
       testStream.write(JSON.stringify(DefaultPayload));
     });
+
+    test('use seperator and skip object', function (done) {
+      parser.usesSeperator = true;
+
+      let counter = 0;
+
+      parser.on('data', () => {
+        if (++counter === 2) done();
+      });
+
+      testStream.write(JSON.stringify({ name: "foo" }));
+      testStream.write(JSON.stringify({ name: "test" }));
+      testStream.write('\n' + JSON.stringify({ name: "bar" }));
+    });
   });
 });

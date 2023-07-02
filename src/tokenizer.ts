@@ -16,10 +16,12 @@ import {
 export interface TokenizerOptions extends TransformOptions {
   maxNumberLength?: number;
   maxStringLength?: number;
+  seperatorCode?: number;
 }
 
 export const DEFAULT_TOKENIZER_MAX_NUMBER_LENGTH = 20;
 export const DEFAULT_TOKENIZER_MAX_STRING_LENGTH = 1000;
+export const DEFAULT_TOKENIZER_SEPERATOR_CODE = '\n'.charCodeAt(0);
 
 export class Tokenizer extends Transform implements TokenizerBase {
   private _buffer: string = '';
@@ -27,6 +29,7 @@ export class Tokenizer extends Transform implements TokenizerBase {
 
   public maxNumberLength: number;
   public maxStringLength: number;
+  public seperatorCode: number;
 
   constructor(options: TokenizerOptions = {}) {
     super({
@@ -39,6 +42,8 @@ export class Tokenizer extends Transform implements TokenizerBase {
       options.maxNumberLength ?? DEFAULT_TOKENIZER_MAX_NUMBER_LENGTH;
     this.maxStringLength =
       options.maxStringLength ?? DEFAULT_TOKENIZER_MAX_STRING_LENGTH;
+    this.seperatorCode =
+      options.seperatorCode ?? DEFAULT_TOKENIZER_SEPERATOR_CODE;
   }
 
   isEOF(): boolean {
@@ -169,6 +174,12 @@ export class Tokenizer extends Transform implements TokenizerBase {
     }
 
     const item = this.getItemAt();
+
+    if (item === this.seperatorCode) {
+      this._buffer = this._buffer.slice(1);
+      return new TokenResult(TokenType.Seperator, String.fromCharCode(item));
+    }
+
     const scanResult = this.scan(item);
 
     if (scanResult !== null) {
