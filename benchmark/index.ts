@@ -1,4 +1,4 @@
-const Benchmarkify = require("benchmarkify");
+import Benchmarkify from 'benchmarkify';
 import { Parser as JsonStreamParser, Tokenizer } from '../src/index';
 import { chain } from 'stream-chain';
 import Parser from 'stream-json/Parser';
@@ -53,7 +53,7 @@ const jsonStreamPerf = (done: () => void, count: number = 20) => {
 };
 
 const benchmark = new Benchmarkify("Json Perf").printHeader();
-const bench1 = benchmark.createSuite("Increment integer");
+const bench1 = benchmark.createSuite("Parse JSON", {});
 
 bench1.add("my-json-stream", (done) => myJsonStreamPerf(done));
 bench1.ref("json-stream", (done) => jsonStreamPerf(done));

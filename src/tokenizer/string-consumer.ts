@@ -7,6 +7,11 @@ export enum StringConsumerState {
   Failed = -1
 }
 
+const STRING_CONSUMER_ESCAPE_CHARACTER = String.fromCharCode(
+  TokenCode.Backslash
+);
+const STRING_CONSUMER_ESCAPE_QUOTE = String.fromCharCode(TokenCode.Quote);
+
 export class StringConsumer extends Consumer {
   private tokenizer: TokenizerBase;
   private _index: number;
@@ -21,37 +26,69 @@ export class StringConsumer extends Consumer {
     this._index = offset;
   }
 
+  private findNextEscape(): number | null {
+    const escapeIndex = this.tokenizer.findNextIndex(
+      STRING_CONSUMER_ESCAPE_CHARACTER,
+      this._index
+    );
+    const quoteIndex = this.tokenizer.findNextIndex(
+      STRING_CONSUMER_ESCAPE_QUOTE,
+      this._index
+    );
+
+    if (escapeIndex === -1) {
+      return null;
+    }
+
+    if (quoteIndex === -1 || escapeIndex < quoteIndex) {
+      return escapeIndex;
+    }
+
+    return null;
+  }
+
   private digest(): void {
-    let item = this.tokenizer.getRawItemAt(this._index);
+    let index = this.findNextEscape();
 
-    while (item !== null && this._index <= this.maxLength) {
-      const code = item.charCodeAt(0);
-      const nextCode = this.tokenizer.getItemAt(this._index + 1);
+    while (index !== null && this._index <= this.maxLength) {
+      const nextCode = this.tokenizer.getItemAt(index + 1);
 
-      if (code === TokenCode.Quote) {
+      if (nextCode === TokenCode.Backslash) {
         this._state = StringConsumerState.Completed;
-        this._index++;
-        break;
-      } else if (code !== TokenCode.Backslash && nextCode === TokenCode.Quote) {
-        this._state = StringConsumerState.Completed;
-        this._buffer += item;
-        this._index += 2;
-        break;
-      } else if (code === TokenCode.Backslash && nextCode === TokenCode.Quote) {
-        this._buffer += '"';
-        this._index++;
-      } else if (
-        code === TokenCode.Backslash &&
-        nextCode === TokenCode.Backslash
-      ) {
-        this._buffer += '\\';
-        this._index++;
-      } else {
-        this._buffer += item;
+        this._buffer +=
+          this.tokenizer.getRange(this._index, index) +
+          STRING_CONSUMER_ESCAPE_CHARACTER;
+        this._index = index + 2;
+      } else if (nextCode === TokenCode.Quote) {
+        this._buffer +=
+          this.tokenizer.getRange(this._index, index) +
+          STRING_CONSUMER_ESCAPE_QUOTE;
+        this._index = index + 2;
       }
 
-      this._index++;
-      item = this.tokenizer.getRawItemAt(this._index);
+      index = this.findNextEscape();
+    }
+
+    index = this.tokenizer.findNextIndex(
+      STRING_CONSUMER_ESCAPE_QUOTE,
+      this._index
+    );
+
+    if (index !== null) {
+      const previousCode = this.tokenizer.getItemAt(index - 1);
+      const code = this.tokenizer.getItemAt(index);
+
+      if (previousCode !== TokenCode.Backslash && code === TokenCode.Quote) {
+        this._state = StringConsumerState.Completed;
+        this._buffer += this.tokenizer.getRange(this._index, index);
+        this._index = index + 1;
+      }
+    }
+
+    if (this._state !== StringConsumerState.Completed) {
+      const nextIndex = this.tokenizer.getRemainingSize();
+      this._buffer += this.tokenizer.getRange(this._index, nextIndex - 1) ?? '';
+      this._index = nextIndex;
     }
   }
 

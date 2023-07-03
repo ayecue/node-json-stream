@@ -90,5 +90,8 @@ export class PendingTokenResult extends TokenResult {
 export interface TokenizerBase {
   getItemAt(offset?: number): number | null;
   getRawItemAt(offset?: number): string | null;
+  findNextIndex(item: string, startFrom?: number): number | null;
   isEOF(): boolean;
+  getRemainingSize(): number;
+  getRange(from: number, to: number): string;
 }

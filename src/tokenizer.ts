@@ -66,6 +66,26 @@ export class Tokenizer extends Transform implements TokenizerBase {
     return this._buffer.charAt(offset);
   }
 
+  findNextIndex(item: string, startFrom: number = 0): number | null {
+    const index = this._buffer.indexOf(item, startFrom);
+
+    if (index === -1) {
+      return null;
+    }
+
+    return index;
+  }
+
+  getRemainingSize(): number {
+    return this._buffer.length;
+  }
+
+  getRange(from: number, to: number): string | null {
+    if (this._buffer.length <= from) return null;
+    if (this._buffer.length <= to) return null;
+    return this._buffer.slice(from, to);
+  }
+
   private scanNumericLiteral() {
     const numericScanner = new DigitConsumer(this, this.maxNumberLength, 1);
     const consume = (): TokenResult => {

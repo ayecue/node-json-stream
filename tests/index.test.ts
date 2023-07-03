@@ -163,5 +163,15 @@ describe('json-stream', function () {
 
       testStream.write(JSON.stringify({ name: "foo", myArray: [1,2,3,4,5] }));
     });
+
+    test('split string in two different writes', function (done) {
+      parser.on('data', (data) => {
+        expect(data).toEqual('    firstString"    endString');
+        done();
+      });
+
+      tokenizer.write('"    firstString\\"');
+      tokenizer.write('    endString"');
+    });
   });
 });
