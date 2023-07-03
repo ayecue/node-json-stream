@@ -47,32 +47,9 @@ export class TokenResult {
   readonly type: TokenType;
   readonly value: string;
 
-  static Seperator: string = ':';
-
-  static parse(data: string): TokenResult | null {
-    const index = data.indexOf(TokenResult.Seperator);
-
-    if (index === -1) {
-      return null;
-    }
-
-    const type = data.slice(0, index);
-
-    if (TokenTypeValues.includes(type)) {
-      const value = data.slice(index + 1);
-      return new TokenResult(type as TokenType, value);
-    }
-
-    return null;
-  }
-
   constructor(type: TokenType, value: string = '') {
     this.type = type;
     this.value = value;
-  }
-
-  toString() {
-    return `${this.type}${TokenResult.Seperator}${this.value}`;
   }
 }
 

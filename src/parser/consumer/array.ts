@@ -11,8 +11,8 @@ import { PendingConsumer } from './pending';
 export enum ArrayConsumerState {
   Initial = 0,
   AfterInitial = 1,
-  WaitingForValue = 1,
-  WaitingForComma = 2
+  WaitingForValue = 2,
+  WaitingForComma = 3
 }
 
 export class ArrayConsumer extends PendingConsumer {

@@ -6,6 +6,7 @@
     "numberWithNotation": 12e+45,
     "floatingNumber": 1.235,
     "floatingNumberWithNotion": 12.4e+45,
+    "aioNumber": -12.4e+45,
     "arr": ["myString", true, false, null, {
       "foo": false
     }],

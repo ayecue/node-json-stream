@@ -48,11 +48,11 @@ describe('json-stream', function () {
 
     test('root > number', function (done) {
       testStream.on('data', (data) => {
-        expect(data).toEqual(DefaultPayload.data.floatingNumber);
+        expect(data).toEqual(DefaultPayload.data.aioNumber);
         done();
       });
 
-      testStream.write(JSON.stringify(DefaultPayload.data.floatingNumber) + '\n');
+      testStream.write(JSON.stringify(DefaultPayload.data.aioNumber) + '\n');
     });
 
     test('root > array', function (done) {
@@ -66,22 +66,83 @@ describe('json-stream', function () {
   });
 
   describe('scenarios', () => {
-    test('invalid payload', function (done) {
-      parser.once('parsing-error', (err) => {
-        expect(err).toBeInstanceOf(Error);
-        done();
+    describe('invalid payload with object', () => {
+      test('default', function (done) {
+        parser.once('parsing-error', (err) => {
+          expect(err).toBeInstanceOf(Error);
+          done();
+        });
+        testStream.write('{ 1234: "invalid" }');
       });
-      testStream.write('{ 1234: "invalid" }');
+
+      test('recover', function (done) {
+        testStream.on('data', (data) => {
+          expect(data).toEqual(DefaultPayload);
+          done();
+        });
+
+        testStream.write('{ foo: invalid }');
+        testStream.write(JSON.stringify(DefaultPayload));
+      });
+
+      test('nested', function (done) {
+        parser.once('parsing-error', (err) => {
+          expect(err).toBeInstanceOf(Error);
+          done();
+        });
+        testStream.write('{ "foo": { 1234: "bar" } }');
+      });
+
+      test('delimiter', function (done) {
+        parser.once('parsing-error', (err) => {
+          expect(err).toBeInstanceOf(Error);
+          done();
+        });
+        testStream.write('{ "foo" }');
+      });
+
+      test('comma', function (done) {
+        parser.once('parsing-error', (err) => {
+          expect(err).toBeInstanceOf(Error);
+          done();
+        });
+        testStream.write('{ "foo":1234: }');
+      });
     });
 
-    test('invalid payload but recover anyway', function (done) {
-      testStream.on('data', (data) => {
-        expect(data).toEqual(DefaultPayload);
-        done();
+    describe('invalid payload with array', () => {
+      test('default', function (done) {
+        parser.once('parsing-error', (err) => {
+          expect(err).toBeInstanceOf(Error);
+          done();
+        });
+        testStream.write('[ 1234: ]');
       });
 
-      testStream.write('{ foo: invalid }');
-      testStream.write(JSON.stringify(DefaultPayload));
+      test('nested', function (done) {
+        parser.once('parsing-error', (err) => {
+          expect(err).toBeInstanceOf(Error);
+          done();
+        });
+        testStream.write('[ { 1234: "test" } ]');
+      });
+
+      test('value', function (done) {
+        parser.once('parsing-error', (err) => {
+          expect(err).toBeInstanceOf(Error);
+          done();
+        });
+        testStream.write('[ 1234, ]');
+      });
+
+
+      test('comma', function (done) {
+        parser.once('parsing-error', (err) => {
+          expect(err).toBeInstanceOf(Error);
+          done();
+        });
+        testStream.write('[ 1234: ]');
+      });
     });
 
     test('only allow object root but write string', function (done) {
