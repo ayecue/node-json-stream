@@ -93,5 +93,5 @@ export interface TokenizerBase {
   findNextIndex(item: string, startFrom?: number): number | null;
   isEOF(): boolean;
   getRemainingSize(): number;
-  getRange(from: number, to: number): string;
+  getRange(from: number, to: number): string | null;
 }
