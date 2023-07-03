@@ -26,8 +26,7 @@ export class StringConsumer extends Consumer {
 
     while (item !== null && this._index <= this.maxLength) {
       const code = item.charCodeAt(0);
-      const next = this.tokenizer.getRawItemAt(this._index + 1);
-      const nextCode = next.charCodeAt(0);
+      const nextCode = this.tokenizer.getItemAt(this._index + 1);
 
       if (code === TokenCode.Quote) {
         this._state = StringConsumerState.Completed;
