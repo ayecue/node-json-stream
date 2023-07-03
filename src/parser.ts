@@ -58,10 +58,10 @@ export class Parser extends Transform {
     this._complete(callback);
   }
 
-  _complete(callback: TransformCallback) {
+  _complete(callback: TransformCallback, waitForSeperator: boolean = true) {
     this._root = null;
 
-    if (this.usesSeparator) {
+    if (this.usesSeparator && waitForSeperator) {
       this._waitingForSeperator = true;
     }
 
@@ -81,7 +81,7 @@ export class Parser extends Transform {
     }
 
     if (item.type === TokenType.Seperator) {
-      return this._complete(callback);
+      return this._complete(callback, false);
     } else if (item.type === TokenType.Invalid) {
       return this._parsingError(
         `Invalid token with "${item.value}" as value.`,

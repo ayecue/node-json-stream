@@ -40,13 +40,12 @@ export class DigitConsumer extends Consumer {
 
     while (item !== null) {
       if (item < TokenCode.Number0 || item > TokenCode.Number9) {
+        callback();
         break;
       }
 
       item = this.tokenizer.getItemAt(++this._index);
     }
-
-    callback();
   }
 
   private digestDot() {
@@ -104,13 +103,13 @@ export class DigitConsumer extends Consumer {
 
   consume(): boolean {
     while (
-      !this.tokenizer.isEOF() &&
+      this.tokenizer.getRemainingSize() > this._index &&
       this._state !== DigitConsumerState.Completed &&
       this._index <= this.maxLength
     )
       this.digest();
 
-    if (this._index > this.maxLength) {
+    if (this._index >= this.maxLength) {
       this._state = DigitConsumerState.Failed;
     }
 

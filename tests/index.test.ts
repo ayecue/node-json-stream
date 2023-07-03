@@ -52,7 +52,7 @@ describe('json-stream', function () {
         done();
       });
 
-      testStream.write(JSON.stringify(DefaultPayload.data.floatingNumber));
+      testStream.write(JSON.stringify(DefaultPayload.data.floatingNumber) + '\n');
     });
 
     test('root > array', function (done) {
@@ -71,7 +71,7 @@ describe('json-stream', function () {
         expect(err).toBeInstanceOf(Error);
         done();
       });
-      testStream.write('{ foo: invalid }');
+      testStream.write('{ 1234: "invalid" }');
     });
 
     test('invalid payload but recover anyway', function (done) {
@@ -142,6 +142,18 @@ describe('json-stream', function () {
       testStream.write('\n' + JSON.stringify({ name: "bar" }));
     });
 
+    test('use seperator too early and skip object', function (done) {
+      parser.usesSeparator = true;
+
+      testStream.on('data', (data) => {
+        expect(data).toEqual({ name: "bar" });
+        done();
+      });
+
+      testStream.write('{ "myKey":\n');
+      testStream.write(JSON.stringify({ name: "bar" }));
+    });
+
     test('use resolve path option to only get number', function (done) {
       parser.resolvePath = ['myNumber'];
 
@@ -172,6 +184,16 @@ describe('json-stream', function () {
 
       tokenizer.write('"    firstString\\"');
       tokenizer.write('    endString"');
+    });
+
+    test('split number in two different writes', function (done) {
+      parser.on('data', (data) => {
+        expect(data).toEqual({ "test": 12345678 });
+        done();
+      });
+
+      tokenizer.write('{ "test":1234');
+      tokenizer.write('5678 }');
     });
   });
 });
