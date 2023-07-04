@@ -38,8 +38,8 @@ pass.write(JSON.stringify({
 ```ts
 new Parser({
   /**
-    Define maximum payload size, if exceeded parser
-    will parsing-error event.
+    Define maximum payload size, if size is
+    exceeded parser will emit a parsing-error event.
 
     By default uses 4096.
   */
@@ -92,16 +92,16 @@ new Tokenizer({
   */
   maxStringLength: 10,
   /**
-    Define seperator character for tokenizer to forward to parser.
+    Define separator character for tokenizer to forward to parser.
     Uses \n by default.
   */
-  seperatorCode: '%'
+  separatorCharacter: '%'
 })
 ```
 
 ## Examples
 
-**One message after another without seperator**
+**One message after another without separator**
 
 ```ts
 import { Parser, Tokenizer } from 'node-json-stream';
@@ -187,7 +187,7 @@ myStream.write(JSON.stringify({
 }));
 ```
 
-**Send multiple messages in one and use separater**
+**Send multiple messages in one and use separator**
 
 ```ts
 import { Parser, Tokenizer } from 'node-json-stream';
