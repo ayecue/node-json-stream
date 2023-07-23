@@ -87,8 +87,8 @@ export class StringConsumer extends Consumer {
 
     if (this._state !== StringConsumerState.Completed) {
       const nextIndex = this.tokenizer.getRemainingSize();
-      this._buffer += this.tokenizer.getRange(this._index, nextIndex - 1) ?? '';
-      this._index = nextIndex - 1;
+      this._buffer += this.tokenizer.getRange(this._index, nextIndex) ?? '';
+      this._index = nextIndex;
     }
   }
 

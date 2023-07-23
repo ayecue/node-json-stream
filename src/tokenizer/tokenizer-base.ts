@@ -71,4 +71,5 @@ export interface TokenizerBase {
   isEOF(): boolean;
   getRemainingSize(): number;
   getRange(from: number, to: number): string | null;
+  getText(): string;
 }

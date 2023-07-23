@@ -81,9 +81,13 @@ export class Tokenizer extends Transform implements TokenizerBase {
   }
 
   getRange(from: number, to: number): string | null {
-    if (this._buffer.length <= from) return null;
-    if (this._buffer.length <= to) return null;
+    if (this._buffer.length < from) return null;
+    if (this._buffer.length < to) return null;
     return this._buffer.slice(from, to);
+  }
+
+  getText(): string {
+    return this._buffer;
   }
 
   private scanNumericLiteral() {
