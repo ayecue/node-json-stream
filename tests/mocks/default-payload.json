@@ -2,6 +2,7 @@
   "method": "test",
   "data": {
     "message": "Hello, \\\\\\\\\" server! Love, Client.",
+    "anotherMessage": "test\\ntest",
     "wholeNumber": 1234,
     "numberWithNotation": 12e+45,
     "floatingNumber": 1.235,

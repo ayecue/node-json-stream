@@ -64,6 +64,9 @@ export class StringConsumer extends Consumer {
           this.tokenizer.getRange(this._index, index) +
           STRING_CONSUMER_ESCAPE_QUOTE;
         this._index = index + 2;
+      } else {
+        this._buffer += this.tokenizer.getRange(this._index, index + 1);
+        this._index = index + 1;
       }
 
       index = this.findNextEscape();

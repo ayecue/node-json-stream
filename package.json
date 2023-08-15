@@ -1,6 +1,6 @@
 {
   "name": "node-json-stream",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "JSON stream parsing library.",
   "main": "dist/index.js",
   "typings": "dist/index",
